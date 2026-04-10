@@ -1,0 +1,335 @@
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>JTIBTOOL Search - རིས་མེད་ཚིག་མཛོད་ཆེན་མོ།</title>
+<link href="../css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<form accept-charset="UTF-8" action="/search" method="post" name="search" >
+<style type="text/css" id="custom-css">
+.tib{
+	font-size: 24px;
+}
+</style>
+<nav class="navbar navbar-expand-lg" style="background-color: #EFF6FC;">
+  <div class="container-fluid">
+    <span style="margin-right: 25px;margin-left: 25px;font-size: 20px;">རིས་མེད་ཚིག་མཛོད་ཆེན་མོ།</span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Glossaire</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="../translate">Traduction</a>
+        </li>
+        <li class="nav-item">
+           <a class="nav-link" href="../edit">Édition</a>
+        </li>
+        <li class="nav-item">
+           <a class="nav-link" href="/logout">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div><p><h3 style="text-align: center;">Glossaires</h3></div>
+<input type="hidden" name="_csrf" value="3f711d6e-df55-48fd-8f09-69e62df187d4"/>
+    <table style="width: 90%;margin: auto;">
+        <tbody>
+        <tr>
+        <td><span><b>Sources francophones</b></span></p>
+        <p><input checked name="fr" type="checkbox" value="MA" /> <span style="font-size: 16px;">Marc Agate (MA)</span><br />
+        <input checked name="fr" type="checkbox" value="RMY" /> <span style="font-size: 16px;">Encyclopédie (RMY)</span><br />
+        <input checked name="fr" type="checkbox" value="PC" /> <span style="font-size: 16px;">Philippe Cornu (PC</span>)<br />
+        <input checked name="fr" type="checkbox" value="DR" /> <span style="font-size: 16px;">Dzogchen (DR)</span><br />
+        <input checked name="fr" type="checkbox" value="DJ" /> <span style="font-size: 16px;">Damien Jampa (DJ)</span></td>
+        <td><span><b>Sources anglophones</b></span></p>
+        <p><input  name="eng" type="checkbox" value="TSR" /> <span style="font-size: 16px;">Tsépak Rigdzin (TSR)</span><br />
+        <input checked name="eng" type="checkbox" value="RY" /> <span style="font-size: 16px;">Rangjung Yeshé (RY)</span><br />
+        <input  name="eng" type="checkbox" value="IW" /><span style="font-size: 16px;"> Ives Waldo (IW)</span><br />
+        <input checked name="eng" type="checkbox" value="RB" /> <span style="font-size: 16px;">Richard Barron (RB)</span><br /><br /></td>
+        <td><span>&nbsp;</span></p>
+        <p><input  name="eng" type="checkbox" value="VHN" /> <span style="font-size: 16px;">Verbinator-NH (VHN)</span><br />
+        <input checked name="eng" type="checkbox" value="JH" /> <span style="font-size: 16px;">Jeffrey Hopkins (JH)</span><br />
+        <input  name="eng" type="checkbox" value="JV" /> <span style="font-size: 16px;">Jim Valby (JV)</span><br />
+        <input checked name="eng" type="checkbox" value="ILL" /> <span style="font-size: 16px;">Illuminator (ILL)</span><br /><br />
+        </td>
+        <td><span><b>Sources tibétaines</b></span></p>
+        <p><input  name="tib" type="checkbox" value="GCD" /> <span style="font-size: 16px;">Geshé Chödrak (GCD)</span><br />
+        <input  name="tib" type="checkbox" value="TGB" /> <span style="font-size: 16px;">Dak-yik SarDrik (TGB)</span><br />
+        <input checked name="tib" type="checkbox" value="TCM" /> <span style="font-size: 16px;">Tsikdzöd chenmo (TCM)</span><br /><br /><br /><br/>
+        </p></td></tr>
+        </tr>
+        </tbody>
+        </table>
+        <p>&nbsp;</p>
+        <table style="margin: auto; width: 80%;">
+            <tbody>
+            <tr>
+                <td><span><b>Type de recherche : </b></span>
+                </td>
+                <td><select class="form-select" name="searchType">
+                <option value="exacte" selected >exacte</option>
+                        <option value="commence" >commence par ...</option>
+                        <option value="contient" >contient ...</option>
+                        <option value="sanskrit" >sanskrit</option>
+                        <option value="def" >def contient...</option>
+                </select>
+                </td>
+                <td style="vertical-align: middle;"><input pattern=".{4,}" style="background-color:#eff6fc;height:44px;" id="word" name="word" required="required" size="50" type="text" placeholder="wylie ou Unicode, 4 chars minimum" value="byang chub sems dpa'" ></td>
+                <td style="vertical-align: top;"><button class="btn btn-primary"  style="padding: 10px 25px;" type="submit" >Rechercher</button></td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+    
+    
+    <table style="margin:auto; width:80%;">
+    <tr><td>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <nav>
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#fr" data-bs-toggle="tab">Français</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#eng" data-bs-toggle="tab">Anglais</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#tib" data-bs-toggle="tab">Tibétain</a>
+            </li>
+        </ul>
+        </nav>
+        </div>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="fr">
+                <table class="table table-striped">
+                    <br>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;">bodhisattva</td>
+                        <td style="width:5%;font-size:100%;">MA</td>
+                        <td style="width:10%;font-size:100%;">Général</td>
+                        <td style="width:65%;font-size:100%;"><p>bodhisattva; &ecirc;tre d&#39;&eacute;veil</p>
+</td>
+                        <td style="width:65%;font-size:130%;">
+                        
+                            
+                            <a href=../edit?id=421>421</a>
+                            
+                        
+                        </td>
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">RMY</td>
+                        <td style="width:10%;font-size:100%;">Glossaire de base Rimay</td>
+                        <td style="width:65%;font-size:100%;">Bodhisattva, Héros d’éveil, Héros pour l’éveil Chevalier d’éveil, Vaillant pour l’éveil, Courageux pour s’éveiller,</td>
+                        <td style="width:65%;font-size:130%;">
+                        
+                            
+                            <a href=../edit?id=186855>186855</a>
+                            
+                        
+                        </td>
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">DR</td>
+                        <td style="width:10%;font-size:100%;">Glossaire Nyingthig Mapu</td>
+                        <td style="width:65%;font-size:100%;">Bodhisattva, héros pour l'éveil, vaillant à l'esprit d'éveil, vaillant pour l'éveil, chevalier d'éveil</td>
+                        <td style="width:65%;font-size:130%;">
+                        
+                            
+                            <a href=../edit?id=327122>327122</a>
+                            
+                        
+                        </td>
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">PC</td>
+                        <td style="width:10%;font-size:100%;">Glossaire Dictionnaire du Bouddhisme</td>
+                        <td style="width:65%;font-size:100%;">être d'Éveil</td>
+                        <td style="width:65%;font-size:130%;">
+                        
+                            
+                            <a href=../edit?id=334884>334884</a>
+                            
+                        
+                        </td>
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">PC</td>
+                        <td style="width:10%;font-size:100%;">PC-Thèse Bardos</td>
+                        <td style="width:65%;font-size:100%;">Héros de l'Esprit d'Eveil, Bodhisattva </td>
+                        <td style="width:65%;font-size:130%;">
+                        
+                            
+                            <a href=../edit?id=337719>337719</a>
+                            
+                        
+                        </td>
+                      </tr>
+                    
+                </table>
+            </div>
+            <div class="tab-pane fade" id="eng">
+                <table class="table table-striped">
+                    <br>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">RY</td>
+                        <td style="width:10%;font-size:100%;">General</td>
+                        <td style="width:65%;font-size:100%;">bodhisattva [awakening being]; bodhisattva. bodhisattvas. a being on the path of enlightenment, bodhisattva. 'heroic being of enlightenment'</td>
+                        
+                            
+                            <td style="width:65%;font-size:130%;"><a href=../edit?id=13600>13600</a></td>
+                            
+                        
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">RY</td>
+                        <td style="width:10%;font-size:100%;">General</td>
+                        <td style="width:65%;font-size:100%;">bodhisattva. Someone who has developed bodhichitta, the aspiration to attain enlightenment in order to benefit all sentient beings. A practitioner of the Mahayana path; especially a noble bodhisattva who has attained the first level</td>
+                        
+                            
+                            <td style="width:65%;font-size:130%;"><a href=../edit?id=13601>13601</a></td>
+                            
+                        
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">JH</td>
+                        <td style="width:10%;font-size:100%;">General</td>
+                        <td style="width:65%;font-size:100%;">Bodhisattva; a hero with respect to contemplating enlightenment; one intent on full enlightenment</td>
+                        
+                            
+                            <td style="width:65%;font-size:130%;"><a href=../edit?id=166416>166416</a></td>
+                            
+                        
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">RB</td>
+                        <td style="width:10%;font-size:100%;">THDL</td>
+                        <td style="width:65%;font-size:100%;">bodhisattva</td>
+                        
+                            
+                            <td style="width:65%;font-size:130%;"><a href=../edit?id=571512>571512</a></td>
+                            
+                        
+                      </tr>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ་</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">ILL</td>
+                        <td style="width:10%;font-size:100%;">General</td>
+                        <td style="width:65%;font-size:100%;"><noun> «Bodhisatva». Translation of the Sanskrit «bodhisatva». See བོདྷ for important notes on the spelling of the term.  Even though most Western Buddhists spell the term «bodhisattva» in fact all earlier Tibetan texts spelled the term as given.  The great Dilgo Khyentse Rinpoche when asked about this stated that bodhisatva and vajrasatva, too, were the correct spellings and that there was a difference in meaning between «satva» and «sattva». The difference is that the latter refers more to a person in general, a being, whereas the former refers to someone who is an heroic type of person, a warrior, someone with great courage and commitment.  The Tibetans translated the Sanskrit literally: «bodhi» or བྱང་ཆུབ་ in Tibetan refers to the enlightenment of a buddha and «satva» or སེམས་དཔའ་ in Tibetan refers to someone who has a mind that is heroically committed, in this case to the enlightenment of a buddha.## The term bodhisatva is unique to the ཐེག་པ་ཆེན་པོ་ Great Vehicle.  It is used to distinguish the practitioner of the Great Vehicle from the practitioners of the ཐེག་པ་དམན་པ་ Lesser Vehicle.  Practitioners of the Lesser Vehicle have a motivation which is centred on removing themselves from the unsatisfactoriness of cyclic existence and becoming an arhat for their own salvation.  Practitioners of the great vehicle have a motivation of becoming a buddha so that they can remove all sentient beings from the unsatisfactoriness of cyclic existence and bring all of them to perfect buddhahood.  The lack of selfish concern and the willingness to undertake a much more difficult and long journey for the sake of others is the hallmark of a practitioner of the great vehicle which results in them being called «hero of enlightenment».## The distinguishing feature of a bodhisatva is that they have aroused བྱང་ཆུབ་ཀྱི་སེམས་ «bodhicitta», the mind which is bent on full enlightenment for the sake of all sentient beings.</td>
+                        
+                            
+                            <td style="width:65%;font-size:130%;"><a href=../edit?id=586677>586677</a></td>
+                            
+                        
+                      </tr>
+                    
+                </table>
+                    </ul>
+            </div>
+            <div class="tab-pane fade" id="tib">
+                <table class="table table-striped">
+                    <br>
+                    
+                    
+                    
+                    
+                      <tr>
+                        <td class="tib" style="width: 15%;">བྱང་ཆུབ་སེམས་དཔའ་</td>
+                        <td style="width:5%;font-size:100%;"></td>
+                        <td style="width:5%;font-size:100%;">TCM</td>
+                        <td style="width:10%;font-size:100%;">General></td>
+                        <td style="width:65%;font-size:130%;"><བོདྷཏྭཿ> ཐེག་ཆེན་སློབ་ལམ་པའི་གང་ཟག་སྟེ། བྱང་ཆུབ་ཆེན་པོ་ཐོབ་ཆེད་བསྐལ་པའི་ཡུན་དང་། འགྲོ་མང་གི་མཐའ། དབུ་དང་ཡན་ལག་གི་སྦྱིན་པ་གཏོང་བ་ལ་སེམས་མི་ཞུམ་པས་བྱང་ཆུབ་སེམས་དཔའ་ཞེས་བྱའོ།།</td>
+                        
+                            
+                                <td style="width:65%;font-size:130%;"><a href=../edit?id=113600>113600</a></td>
+                            
+                        
+                      </tr>
+                    
+                </table>
+            </div>
+        </div>
+
+            </td></tr>
+            </table>
+        
+        
+        </div>
+        </form>
+            <div style="margin-left:45px; margin-right:45px;">
+</body>
+<script src="../js/bootstrap.bundle.min.js" ></script>
+<script src="../js/require.js" ></script>
+<script src="../js/main.js" ></script>
+</html>

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - Dict Web{% endblock %}
+
+{% block content %}
+    <section class="card">
+        <h2>Accueil</h2>
+        <p>Bienvenue {{ username }}.</p>
+        <p>L'application FastAPI fonctionne avec une vraie session.</p>
+        <p><a href="/logout">Se déconnecter</a></p>
+    </section>
+{% endblock %}

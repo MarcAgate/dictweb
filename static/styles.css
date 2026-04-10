@@ -1,0 +1,470 @@
+body.app-body {
+    background-color: #f6f8fb;
+    color: #1f2937;
+}
+
+.navbar-brand {
+    letter-spacing: 0.02em;
+}
+
+.search-card {
+    border-radius: 1rem;
+}
+
+.results-toolbar .badge {
+    font-weight: 500;
+    padding: 0.55rem 0.85rem;
+}
+
+.results-table {
+    font-size: 0.95rem;
+}
+
+.results-table thead th {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    white-space: nowrap;
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+}
+
+.results-table td {
+    padding: 1rem 0.9rem;
+    vertical-align: top;
+}
+
+.results-table .col-tib,
+.results-table .cell-tib {
+    min-width: 190px;
+}
+
+.results-table .col-wylie,
+.results-table .cell-wylie {
+    min-width: 220px;
+}
+
+.results-table .col-source,
+.results-table .cell-source {
+    min-width: 90px;
+    white-space: nowrap;
+}
+
+.results-table .col-context,
+.results-table .cell-context {
+    min-width: 180px;
+}
+
+.results-table .col-definition,
+.results-table .cell-definition {
+    min-width: 420px;
+}
+
+.cell-tib {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.cell-wylie code {
+    font-size: 0.92rem;
+    white-space: normal;
+    word-break: break-word;
+    color: #0f172a;
+    background: #eef2f7;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.35rem;
+}
+
+.cell-source {
+    font-weight: 600;
+    color: #334155;
+}
+
+.cell-context {
+    color: #475569;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Tibetan:wght@400;700&family=Source+Serif+4:ital,wght@0,300..700;1,300..700&display=swap');
+
+:root {
+    --def-bg: #f7f6f2;
+    --def-surface: #f9f8f5;
+    --def-border: #d4d1ca;
+    --def-text: #28251d;
+    --def-text-soft: #5a5750;
+    --def-text-muted: #7a7974;
+    --def-body-font: 'Source Serif 4', Georgia, serif;
+    --def-tibetan-font: 'Noto Serif Tibetan', serif;
+    --def-radius: 0.5rem;
+}
+
+.definition-html {
+    background: var(--def-surface);
+    border: 1px solid var(--def-border);
+    border-radius: var(--def-radius);
+    padding: 10px;
+    color: var(--def-text);
+    font-family: var(--def-body-font);
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    line-height: 1.7;
+    box-shadow: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+    margin-top: 0.85rem;
+}
+
+.definition-html * {
+    box-sizing: border-box;
+}
+
+.definition-html h1,
+.definition-html h2,
+.definition-html h3,
+.definition-html h4,
+.definition-html h5,
+.definition-html h6 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--def-border);
+    line-height: 1.3;
+    color: var(--def-text);
+}
+
+.definition-html h1,
+.definition-html h2 {
+    font-size: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+}
+
+.definition-html h3,
+.definition-html h4,
+.definition-html h5,
+.definition-html h6 {
+    font-size: 1.05em;
+}
+
+.definition-html p {
+    margin-bottom: 10px;
+    max-width: none;
+}
+
+.definition-html ul,
+.definition-html ol {
+    margin: 8px 0 10px 10px;
+    padding-left: 1rem;
+}
+
+.definition-html li {
+    margin-bottom: 8px;
+}
+
+.definition-html hr {
+    border: none;
+    border-top: 1px solid var(--def-border);
+    margin: 10px 0;
+}
+
+.definition-html br + br {
+    display: block;
+    content: "";
+    margin-top: 0.4rem;
+}
+
+.definition-html div[class^="indent-"] {
+    margin-bottom: 8px;
+    line-height: 1.8;
+}
+
+.definition-html .indent-1 {
+    margin-left: 0;
+    padding-left: 10px;
+    border-left: 3px solid var(--def-border);
+    margin-bottom: 10px;
+}
+
+.definition-html .indent-2 {
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 2px solid #e0ddd8;
+    margin-bottom: 8px;
+}
+
+.definition-html .indent-3 {
+    margin-left: 20px;
+    padding-left: 8px;
+    color: var(--def-text-soft);
+    font-size: 0.95em;
+    margin-bottom: 4px;
+}
+
+.definition-html .indent-4 {
+    margin-left: 30px;
+    padding-left: 8px;
+    color: var(--def-text-muted);
+    font-size: 0.9em;
+}
+
+.definition-html .tibetan {
+    font-family: var(--def-tibetan-font);
+    font-size: 1.05em;
+    line-height: 1.7;
+    display: inline-block;
+    margin: 0 0.08em;
+}
+
+.definition-html .big {
+    font-size: 1.08em;
+}
+
+.definition-html em {
+    font-style: italic;
+}
+
+.definition-html strong,
+.definition-html b {
+    font-weight: 700;
+}
+
+.definition-html article {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.definition-html .container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+}
+
+/* =========================
+   LOGIN
+   ========================= */
+
+.login-page {
+    min-height: 100vh;
+    background:
+        linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.login-wrapper {
+    width: 100%;
+    max-width: 460px;
+}
+
+.login-card {
+    border: 0;
+    border-radius: 1.25rem;
+    box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.login-card .card-body {
+    padding: 2rem;
+}
+
+.login-brand {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.login-subtitle {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+}
+
+.login-card .form-label {
+    font-weight: 600;
+    color: #334155;
+}
+
+.login-card .form-control {
+    min-height: 48px;
+    border-radius: 0.75rem;
+}
+
+.login-card .btn-primary {
+    min-height: 48px;
+    border-radius: 0.75rem;
+    font-weight: 600;
+}
+
+.login-footer {
+    margin-top: 1rem;
+    font-size: 0.92rem;
+    color: #64748b;
+    text-align: center;
+}
+
+.login-alert {
+    border-radius: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+/* =========================
+   GLOBAL HELPERS
+   ========================= */
+
+.page-title {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.page-subtitle {
+    color: #64748b;
+}
+
+@media (max-width: 991.98px) {
+    .results-table {
+        font-size: 0.92rem;
+    }
+
+    .cell-tib {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    main.container-fluid {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    .search-card .card-body {
+        padding: 1rem !important;
+    }
+
+    .results-toolbar {
+        align-items: flex-start !important;
+    }
+
+    .login-card .card-body {
+        padding: 1.5rem;
+    }
+}
+.side-panel,
+.detail-panel {
+    border-radius: 1rem;
+}
+
+.searched-term-box {
+    background: #f8fafc;
+}
+
+.searched-term-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.term-list-wrapper {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.term-select-form {
+    margin: 0;
+}
+
+.term-list-item {
+    border: 0;
+    border-bottom: 1px solid #eef2f7;
+    padding: 0.9rem 1rem;
+    background: #fff;
+}
+
+.term-list-item:hover {
+    background: #f8fafc;
+}
+
+.term-list-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.term-list-item.active .term-tib,
+.term-list-item.active .term-wylie {
+    color: #fff;
+}
+
+.term-tib {
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: #0f172a;
+}
+
+.term-wylie {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 0.15rem;
+    word-break: break-word;
+}
+
+.detail-header {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-tib {
+    font-size: 1.5rem;
+    line-height: 1.7;
+    color: #0f172a;
+    margin-bottom: 0.4rem;
+}
+
+.detail-wylie code {
+    font-size: 1rem;
+    color: #0f172a;
+    background: #eef2f7;
+    padding: 0.25rem 0.45rem;
+    border-radius: 0.35rem;
+}
+
+.definition-block {
+    padding: 1rem 0 1.25rem 0;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.definition-block:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.92rem;
+}
+
+.meta-label {
+    font-weight: 700;
+    color: #475569;
+}
+
+.meta-value {
+    color: #1f2937;
+}
+
+.empty-tab {
+    color: #64748b;
+    padding: 1rem 0;
+    font-style: italic;
+}
+
+.tibetan-content {
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
