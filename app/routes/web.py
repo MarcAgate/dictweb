@@ -3,7 +3,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.auth import authenticate_user
-from app.search import prepare_search_view_data
+from app.search import prepare_search_view_data, fetch_sources_grouped
+
+from typing import List
+from app.search import prepare_search_view_data, fetch_sources_grouped
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -63,42 +66,45 @@ def search_page(request: Request):
     if not request.session.get("username"):
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
+    sources_grouped = fetch_sources_grouped()
+
     return templates.TemplateResponse(
         request=request,
         name="search.html",
         context={
             "q": "",
             "match_mode": "exact",
-            "source": "",
-            "lang": "",
-            "contexte": "",
             "selected_key": "",
             "entries": [],
             "selected_entry": None,
-            "result_count": 0
+            "result_count": 0,
+            "sources_grouped": sources_grouped,
+            "selected_sources": [],
         }
     )
 
+
+from typing import List
 
 @router.post("/search", response_class=HTMLResponse)
 def search_submit(
     request: Request,
     q: str = Form(""),
     match_mode: str = Form("exact"),
-    source: str = Form(""),
-    lang: str = Form(""),
-    contexte: str = Form(""),
+    sources: List[str] = Form([]),
     selected_key: str = Form("")
 ):
     if not request.session.get("username"):
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
+    sources_grouped = fetch_sources_grouped()
+
     view_data = prepare_search_view_data(
         term=q,
         match_mode=match_mode,
-        source=source,
-        lang=lang,
-        contexte=contexte,
+        sources=sources,
+        lang="",
+        contexte="",
         selected_key=selected_key
     )
 
@@ -108,12 +114,11 @@ def search_submit(
         context={
             "q": q,
             "match_mode": match_mode,
-            "source": source,
-            "lang": lang,
-            "contexte": contexte,
-            "selected_key": selected_key,
+            "selected_key": view_data["selected_key"],
             "entries": view_data["entries"],
             "selected_entry": view_data["selected_entry"],
-            "result_count": view_data["result_count"]
+            "result_count": view_data["result_count"],
+            "sources_grouped": sources_grouped,
+            "selected_sources": sources,
         }
     )
