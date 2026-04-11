@@ -1,15 +1,16 @@
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from app.db import get_connection
 import pyewts
 from tibetan_sort.tibetan_sort import TibetanSort
+
+from app.db import get_connection
 
 converter = pyewts.pyewts()
 sorter = TibetanSort()
 
 
 def contains_tibetan(text: str) -> bool:
-    return any('\u0F00' <= ch <= '\u0FFF' for ch in text)
+    return any("\u0F00" <= ch <= "\u0FFF" for ch in (text or ""))
 
 
 def normalize_search_term(term: str) -> str:
@@ -59,7 +60,11 @@ def sort_entries_by_tibetan(entries: List[Dict[str, Any]]) -> List[Dict[str, Any
         decorated.append((idx, tib_key, entry))
 
     tib_keys = [item[1] for item in decorated]
-    sorted_keys = sorter.sort_list(tib_keys)
+
+    try:
+        sorted_keys = sorter.sort_list(tib_keys)
+    except Exception:
+        return entries
 
     key_positions: Dict[str, List[int]] = {}
     for pos, key in enumerate(sorted_keys):
@@ -84,21 +89,22 @@ def fetch_search_rows(
     match_mode: str = "contains",
     sources: Optional[List[str]] = None,
     lang: str = "",
-    contexte: str = ""
+    contexte: str = "",
 ):
     normalized = normalize_search_term(term)
 
     query = """
-        SELECT
-            id,
-            tib,
-            wylie,
-            source,
-            contexte,
-            lang,
-            def
-        FROM dict
-        WHERE 1=1
+    SELECT
+        id,
+        tib,
+        wylie,
+        source,
+        contexte,
+        lang,
+        def,
+        defWeb
+    FROM dict
+    WHERE 1=1
     """
     params: List[Any] = []
 
@@ -107,10 +113,11 @@ def fetch_search_rows(
         query += f" AND {condition}"
         params.extend(condition_params)
 
-    if sources:
-        placeholders = ",".join("?" for _ in sources)
+    clean_sources = [src.strip() for src in (sources or []) if src and src.strip()]
+    if clean_sources:
+        placeholders = ",".join("?" for _ in clean_sources)
         query += f" AND source IN ({placeholders})"
-        params.extend(sources)
+        params.extend(clean_sources)
 
     if lang.strip():
         query += " AND lang = ?"
@@ -159,7 +166,7 @@ def build_tabs_for_wylie(rows, selected_wylie: str) -> Dict[str, List[Dict[str, 
     tabs: Dict[str, List[Dict[str, Any]]] = {
         "fr": [],
         "eng": [],
-        "tib": []
+        "tib": [],
     }
 
     for row in rows:
@@ -170,12 +177,12 @@ def build_tabs_for_wylie(rows, selected_wylie: str) -> Dict[str, List[Dict[str, 
         lang_value = (row["lang"] or "").strip().upper()
 
         item = {
-            "source": row["source"],
-            "contexte": row["contexte"],
-            "definition": row["def"],
+            "source": row["source"] or "",
+            "contexte": row["contexte"] or "",
+            "definition": row["defWeb"] or "",
             "lang": lang_value,
-            "tib": row["tib"],
-            "wylie": row["wylie"],
+            "tib": row["tib"] or "",
+            "wylie": row["wylie"] or "",
         }
 
         if lang_value == "FR":
@@ -194,14 +201,14 @@ def prepare_search_view_data(
     sources: Optional[List[str]] = None,
     lang: str = "",
     contexte: str = "",
-    selected_key: str = ""
+    selected_key: str = "",
 ) -> Dict[str, Any]:
     rows = fetch_search_rows(
         term=term,
         match_mode=match_mode,
         sources=sources,
         lang=lang,
-        contexte=contexte
+        contexte=contexte,
     )
 
     entries = build_entries_from_rows(rows)
@@ -213,24 +220,23 @@ def prepare_search_view_data(
         if selected_key:
             selected_entry = next(
                 (entry for entry in entries if entry["key"] == selected_key),
-                None
+                None,
             )
 
         if selected_entry is None:
             selected_entry = entries[0]
 
         selected_wylie = selected_entry["wylie"]
-
         selected_entry = {
             **selected_entry,
-            "tabs": build_tabs_for_wylie(rows, selected_wylie)
+            "tabs": build_tabs_for_wylie(rows, selected_wylie),
         }
 
     return {
         "entries": entries,
         "selected_entry": selected_entry,
         "selected_key": selected_wylie,
-        "result_count": len(entries)
+        "result_count": len(entries),
     }
 
 
@@ -250,7 +256,7 @@ def fetch_sources_grouped() -> Dict[str, List[Dict[str, Any]]]:
         grouped: Dict[str, List[Dict[str, Any]]] = {
             "FR": [],
             "EN": [],
-            "TIB": []
+            "TIB": [],
         }
 
         for row in rows:
@@ -259,14 +265,18 @@ def fetch_sources_grouped() -> Dict[str, List[Dict[str, Any]]]:
             family = (row["family"] or "").strip().upper()
             sort_order = row["sort_order"]
 
-            if family in grouped:
-                grouped[family].append({
+            if family not in grouped:
+                continue
+
+            grouped[family].append(
+                {
                     "code": code,
                     "label": label,
                     "display_label": f"({code}) {label}",
                     "family": family,
                     "sort_order": sort_order,
-                })
+                }
+            )
 
         return grouped
     finally:

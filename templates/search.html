@@ -2,15 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recherche dans le dictionnaire</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', path='styles.css') }}" rel="stylesheet">
     <style>
         .source-dropdown {
             position: relative;
@@ -33,7 +28,7 @@
         .source-dropdown-toggle:focus {
             outline: none;
             border-color: #86b7fe;
-            box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+            box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
         }
 
         .source-dropdown-label {
@@ -51,9 +46,9 @@
             width: 100%;
             z-index: 1050;
             background: #fff;
-            border: 1px solid rgba(0,0,0,.15);
+            border: 1px solid rgba(0, 0, 0, .15);
             border-radius: 0.5rem;
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15);
             padding: 0.75rem;
             max-height: 320px;
             overflow-y: auto;
@@ -109,16 +104,22 @@
         .source-actions button:hover {
             background: #e9ecef;
         }
+
+        .def-term-link {
+            text-decoration: none;
+            border-bottom: 1px dashed currentColor;
+        }
+
+        .def-term-link:hover {
+            text-decoration: none;
+            border-bottom-style: solid;
+        }
     </style>
 </head>
 <body class="app-body">
-
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-semibold" href="{{ url_for('home') }}">
-                DictWeb
-            </a>
-
+            <a class="navbar-brand fw-semibold" href="{{ url_for('home') }}">DictWeb</a>
             <div class="d-flex align-items-center gap-3">
                 <a class="nav-link" href="{{ url_for('home') }}">Accueil</a>
                 <a class="nav-link active" href="{{ url_for('search_page') }}">Recherche</a>
@@ -130,11 +131,9 @@
     <main class="container-fluid px-4 py-4">
         <div class="row justify-content-center">
             <div class="col-12 col-xxl-11">
-
                 <div class="card border-0 shadow-sm search-card mb-4">
                     <div class="card-body p-4">
                         <form method="post" action="{{ url_for('search_submit') }}" class="row g-3">
-
                             <input type="hidden" name="selected_key" value="{{ selected_key or '' }}">
 
                             <div class="col-12">
@@ -149,29 +148,31 @@
                                         placeholder="Terme tibétain ou Wylie / EWTS"
                                         autofocus
                                     >
-                                    <button class="btn btn-primary px-4" type="submit">
-                                        Rechercher
-                                    </button>
+                                    <button class="btn btn-primary px-4" type="submit">Rechercher</button>
                                 </div>
                             </div>
 
                             <div class="col-12 col-md-4 col-xl-3">
                                 <label for="match_mode" class="form-label">Mode de recherche</label>
                                 <select id="match_mode" name="match_mode" class="form-select">
-                                    <option value="contains" {% if match_mode == "contains" %}selected{% endif %}>Contient</option>
-                                    <option value="starts_with" {% if match_mode == "starts_with" %}selected{% endif %}>Commence par</option>
-                                    <option value="exact" {% if match_mode == "exact" %}selected{% endif %}>Exact</option>
+                                    <option value="contains" {% if match_mode == 'contains' %}selected{% endif %}>Contient</option>
+                                    <option value="starts_with" {% if match_mode == 'starts_with' %}selected{% endif %}>Commence par</option>
+                                    <option value="exact" {% if match_mode == 'exact' %}selected{% endif %}>Exact</option>
                                 </select>
                             </div>
 
                             <div class="col-12 col-md-8 col-xl-5">
                                 <label class="form-label">Sources</label>
-
                                 <div class="source-dropdown" id="sourceDropdown">
-                                    <button type="button" class="source-dropdown-toggle" id="sourceDropdownToggle" aria-expanded="false">
+                                    <button
+                                        type="button"
+                                        class="source-dropdown-toggle"
+                                        id="sourceDropdownToggle"
+                                        aria-expanded="false"
+                                    >
                                         <span class="source-dropdown-label" id="sourceDropdownLabel">
                                             {% if selected_sources %}
-                                                {{ selected_sources|length }} source(s) sélectionnée(s)
+                                                {{ selected_sources|length }} source{% if selected_sources|length > 1 %}s{% endif %} sélectionnée{% if selected_sources|length > 1 %}s{% endif %}
                                             {% else %}
                                                 Sélectionner une ou plusieurs sources
                                             {% endif %}
@@ -186,70 +187,69 @@
                                         </div>
 
                                         {% if sources_grouped.FR %}
-                                        <div class="source-group">
-                                            <div class="source-group-title">Français</div>
-                                            {% for src in sources_grouped.FR %}
-                                            <div class="form-check source-option">
-                                                <input
-                                                    class="form-check-input source-checkbox"
-                                                    type="checkbox"
-                                                    name="sources"
-                                                    id="src_{{ src.code }}"
-                                                    value="{{ src.code }}"
-                                                    {% if src.code in selected_sources %}checked{% endif %}
-                                                >
-                                                <label class="form-check-label" for="src_{{ src.code }}">
-                                                    ({{ src.code }}) {{ src.label }}
-                                                </label>
+                                            <div class="source-group">
+                                                <div class="source-group-title">Français</div>
+                                                {% for src in sources_grouped.FR %}
+                                                    <div class="form-check source-option">
+                                                        <input
+                                                            class="form-check-input source-checkbox"
+                                                            type="checkbox"
+                                                            name="sources"
+                                                            id="src-{{ src.code }}"
+                                                            value="{{ src.code }}"
+                                                            {% if src.code in selected_sources %}checked{% endif %}
+                                                        >
+                                                        <label class="form-check-label" for="src-{{ src.code }}">
+                                                            {{ src.display_label }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
                                             </div>
-                                            {% endfor %}
-                                        </div>
                                         {% endif %}
 
                                         {% if sources_grouped.EN %}
-                                        <div class="source-group">
-                                            <div class="source-group-title">Anglais</div>
-                                            {% for src in sources_grouped.EN %}
-                                            <div class="form-check source-option">
-                                                <input
-                                                    class="form-check-input source-checkbox"
-                                                    type="checkbox"
-                                                    name="sources"
-                                                    id="src_{{ src.code }}"
-                                                    value="{{ src.code }}"
-                                                    {% if src.code in selected_sources %}checked{% endif %}
-                                                >
-                                                <label class="form-check-label" for="src_{{ src.code }}">
-                                                    ({{ src.code }}) {{ src.label }}
-                                                </label>
+                                            <div class="source-group">
+                                                <div class="source-group-title">Anglais</div>
+                                                {% for src in sources_grouped.EN %}
+                                                    <div class="form-check source-option">
+                                                        <input
+                                                            class="form-check-input source-checkbox"
+                                                            type="checkbox"
+                                                            name="sources"
+                                                            id="src-{{ src.code }}"
+                                                            value="{{ src.code }}"
+                                                            {% if src.code in selected_sources %}checked{% endif %}
+                                                        >
+                                                        <label class="form-check-label" for="src-{{ src.code }}">
+                                                            {{ src.display_label }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
                                             </div>
-                                            {% endfor %}
-                                        </div>
                                         {% endif %}
 
                                         {% if sources_grouped.TIB %}
-                                        <div class="source-group">
-                                            <div class="source-group-title">Tibétain</div>
-                                            {% for src in sources_grouped.TIB %}
-                                            <div class="form-check source-option">
-                                                <input
-                                                    class="form-check-input source-checkbox"
-                                                    type="checkbox"
-                                                    name="sources"
-                                                    id="src_{{ src.code }}"
-                                                    value="{{ src.code }}"
-                                                    {% if src.code in selected_sources %}checked{% endif %}
-                                                >
-                                                <label class="form-check-label" for="src_{{ src.code }}">
-                                                    ({{ src.code }}) {{ src.label }}
-                                                </label>
+                                            <div class="source-group">
+                                                <div class="source-group-title">Tibétain</div>
+                                                {% for src in sources_grouped.TIB %}
+                                                    <div class="form-check source-option">
+                                                        <input
+                                                            class="form-check-input source-checkbox"
+                                                            type="checkbox"
+                                                            name="sources"
+                                                            id="src-{{ src.code }}"
+                                                            value="{{ src.code }}"
+                                                            {% if src.code in selected_sources %}checked{% endif %}
+                                                        >
+                                                        <label class="form-check-label" for="src-{{ src.code }}">
+                                                            {{ src.display_label }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
                                             </div>
-                                            {% endfor %}
-                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
-
                                 <div class="form-text">
                                     Cliquez pour ouvrir la liste, puis cochez les sources voulues.
                                 </div>
@@ -259,231 +259,229 @@
                 </div>
 
                 {% if q or selected_sources %}
-                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                    <div>
-                        <h2 class="h5 mb-1">Résultats</h2>
-                        <p class="text-muted mb-0">{{ result_count }} terme(s)</p>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div>
+                            <h2 class="h5 mb-1">Résultats</h2>
+                            <p class="text-muted mb-0">{{ result_count }} terme(s)</p>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if q %}
+                                <span class="badge rounded-pill text-bg-primary">Recherche : {{ q }}</span>
+                            {% endif %}
+                            {% if selected_sources %}
+                                {% for src_code in selected_sources %}
+                                    <span class="badge rounded-pill text-bg-secondary">Source : {{ src_code }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        {% if q %}
-                        <span class="badge rounded-pill text-bg-primary">
-                            Recherche : {{ q }}
-                        </span>
-                        {% endif %}
-                        {% if selected_sources %}
-                            {% for src_code in selected_sources %}
-                            <span class="badge rounded-pill text-bg-secondary">
-                                Source : {{ src_code }}
-                            </span>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                </div>
                 {% endif %}
 
                 {% if entries and selected_entry %}
-                <div class="row g-4">
-                    <div class="col-12 col-lg-4 col-xl-3">
-                        <div class="card border-0 shadow-sm side-panel">
-                            <div class="card-body p-0">
-                                <div class="searched-term-box p-3 border-bottom">
-                                    <div class="small text-uppercase text-muted fw-semibold mb-1">
-                                        Terme recherché
+                    <div class="row g-4">
+                        <div class="col-12 col-lg-4 col-xl-3">
+                            <div class="card border-0 shadow-sm side-panel">
+                                <div class="card-body p-0">
+                                    <div class="searched-term-box p-3 border-bottom">
+                                        <div class="small text-uppercase text-muted fw-semibold mb-1">Terme recherché</div>
+                                        <div class="searched-term-value">{{ q }}</div>
                                     </div>
-                                    <div class="searched-term-value">
-                                        {{ q }}
+
+                                    <div class="term-list-wrapper">
+                                        <div class="list-group list-group-flush">
+                                            {% for entry in entries %}
+                                                <form method="post" action="{{ url_for('search_submit') }}" class="term-select-form">
+                                                    <input type="hidden" name="q" value="{{ q or '' }}">
+                                                    <input type="hidden" name="match_mode" value="{{ match_mode or 'exact' }}">
+                                                    <input type="hidden" name="selected_key" value="{{ entry.key }}">
+                                                    {% for src_code in selected_sources %}
+                                                        <input type="hidden" name="sources" value="{{ src_code }}">
+                                                    {% endfor %}
+
+                                                    <button
+                                                        type="submit"
+                                                        class="list-group-item list-group-item-action text-start term-list-item {% if selected_entry.key == entry.key %}active{% endif %}"
+                                                    >
+                                                        <div class="term-tib">{{ entry.tib }}</div>
+                                                        <div class="term-wylie">{{ entry.wylie }}</div>
+                                                    </button>
+                                                </form>
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <div class="term-list-wrapper">
-                                    <div class="list-group list-group-flush">
-                                        {% for entry in entries %}
-                                        <form method="post" action="{{ url_for('search_submit') }}" class="term-select-form">
-                                            <input type="hidden" name="q" value="{{ q or '' }}">
-                                            <input type="hidden" name="match_mode" value="{{ match_mode or 'exact' }}">
-                                            <input type="hidden" name="selected_key" value="{{ entry['key'] }}">
+                        <div class="col-12 col-lg-8 col-xl-9">
+                            <div class="card border-0 shadow-sm detail-panel">
+                                <div class="card-body p-4">
+                                    <div class="detail-header mb-4">
+                                        <div class="detail-tib">{{ selected_entry["tib"] }}</div>
+                                        <div class="detail-wylie"><code>{{ selected_entry["wylie"] }}</code></div>
+                                    </div>
 
-                                            {% for src_code in selected_sources %}
-                                                <input type="hidden" name="sources" value="{{ src_code }}">
-                                            {% endfor %}
+                                    <ul class="nav nav-tabs mb-4" id="langTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="fr-tab" data-bs-toggle="tab" data-bs-target="#fr-pane" type="button" role="tab" aria-controls="fr-pane" aria-selected="true">FR</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="eng-tab" data-bs-toggle="tab" data-bs-target="#eng-pane" type="button" role="tab" aria-controls="eng-pane" aria-selected="false">ENG</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tib-tab" data-bs-toggle="tab" data-bs-target="#tib-pane" type="button" role="tab" aria-controls="tib-pane" aria-selected="false">TIB</button>
+                                        </li>
+                                    </ul>
 
-                                            <button
-                                                type="submit"
-                                                class="list-group-item list-group-item-action text-start term-list-item {% if selected_entry['key'] == entry['key'] %}active{% endif %}"
-                                            >
-                                                <div class="term-tib">{{ entry["tib"] }}</div>
-                                                <div class="term-wylie">{{ entry["wylie"] }}</div>
-                                            </button>
-                                        </form>
-                                        {% endfor %}
+                                    <div class="tab-content" id="langTabsContent">
+                                        <div class="tab-pane fade show active" id="fr-pane" role="tabpanel" aria-labelledby="fr-tab" tabindex="0">
+                                            {% if selected_entry["tabs"]["fr"] %}
+                                                {% for item in selected_entry["tabs"]["fr"] %}
+                                                    <div class="definition-block">
+                                                        <div class="meta-row">
+                                                            <span class="meta-label">Source</span>
+                                                            <span class="meta-value">{{ item["source"] }}</span>
+                                                        </div>
+                                                        <div class="meta-row">
+                                                            <span class="meta-label">Contexte</span>
+                                                            <span class="meta-value">{{ item["contexte"] }}</span>
+                                                        </div>
+                                                        <div class="definition-html">{{ item["definition"] | safe }}</div>
+                                                    </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="empty-tab">Aucune définition en français.</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="tab-pane fade" id="eng-pane" role="tabpanel" aria-labelledby="eng-tab" tabindex="0">
+                                            {% if selected_entry["tabs"]["eng"] %}
+                                                {% for item in selected_entry["tabs"]["eng"] %}
+                                                    <div class="definition-block">
+                                                        <div class="meta-row">
+                                                            <span class="meta-label">Source</span>
+                                                            <span class="meta-value">{{ item["source"] }}</span>
+                                                        </div>
+                                                        <div class="meta-row">
+                                                            <span class="meta-label">Contexte</span>
+                                                            <span class="meta-value">{{ item["contexte"] }}</span>
+                                                        </div>
+                                                        <div class="definition-html">{{ item["definition"] | safe }}</div>
+                                                    </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="empty-tab">No English definition available.</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="tab-pane fade" id="tib-pane" role="tabpanel" aria-labelledby="tib-tab" tabindex="0">
+                                            {% if selected_entry["tabs"]["tib"] %}
+                                                {% for item in selected_entry["tabs"]["tib"] %}
+                                                    <div class="definition-block">
+                                                        <div class="meta-row">
+                                                            <span class="meta-label">Source</span>
+                                                            <span class="meta-value">{{ item["source"] }}</span>
+                                                        </div>
+                                                        <div class="meta-row">
+                                                            <span class="meta-label">Contexte</span>
+                                                            <span class="meta-value">{{ item["contexte"] }}</span>
+                                                        </div>
+                                                        <div class="definition-html tibetan-content">{{ item["definition"] | safe }}</div>
+                                                    </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="empty-tab">Aucune définition tibétaine.</div>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-12 col-lg-8 col-xl-9">
-                        <div class="card border-0 shadow-sm detail-panel">
-                            <div class="card-body p-4">
-                                <div class="detail-header mb-4">
-                                    <div class="detail-tib">{{ selected_entry["tib"] }}</div>
-                                    <div class="detail-wylie"><code>{{ selected_entry["wylie"] }}</code></div>
-                                </div>
-
-                                <ul class="nav nav-tabs mb-4" id="langTabs" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" id="fr-tab" data-bs-toggle="tab" data-bs-target="#fr-pane" type="button" role="tab" aria-controls="fr-pane" aria-selected="true">
-                                            FR
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="eng-tab" data-bs-toggle="tab" data-bs-target="#eng-pane" type="button" role="tab" aria-controls="eng-pane" aria-selected="false">
-                                            ENG
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="tib-tab" data-bs-toggle="tab" data-bs-target="#tib-pane" type="button" role="tab" aria-controls="tib-pane" aria-selected="false">
-                                            TIB
-                                        </button>
-                                    </li>
-                                </ul>
-
-                                <div class="tab-content" id="langTabsContent">
-                                    <div class="tab-pane fade show active" id="fr-pane" role="tabpanel" aria-labelledby="fr-tab" tabindex="0">
-                                        {% if selected_entry["tabs"]["fr"] %}
-                                            {% for item in selected_entry["tabs"]["fr"] %}
-                                            <div class="definition-block">
-                                                <div class="meta-row">
-                                                    <span class="meta-label">Source</span>
-                                                    <span class="meta-value">{{ item["source"] }}</span>
-                                                </div>
-                                                <div class="meta-row">
-                                                    <span class="meta-label">Contexte</span>
-                                                    <span class="meta-value">{{ item["contexte"] }}</span>
-                                                </div>
-                                                <div class="definition-html">
-                                                    {{ item["definition"] | safe }}
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        {% else %}
-                                            <div class="empty-tab">Aucune définition en français.</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="tab-pane fade" id="eng-pane" role="tabpanel" aria-labelledby="eng-tab" tabindex="0">
-                                        {% if selected_entry["tabs"]["eng"] %}
-                                            {% for item in selected_entry["tabs"]["eng"] %}
-                                            <div class="definition-block">
-                                                <div class="meta-row">
-                                                    <span class="meta-label">Source</span>
-                                                    <span class="meta-value">{{ item["source"] }}</span>
-                                                </div>
-                                                <div class="meta-row">
-                                                    <span class="meta-label">Contexte</span>
-                                                    <span class="meta-value">{{ item["contexte"] }}</span>
-                                                </div>
-                                                <div class="definition-html">
-                                                    {{ item["definition"] | safe }}
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        {% else %}
-                                            <div class="empty-tab">No English definition available.</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="tab-pane fade" id="tib-pane" role="tabpanel" aria-labelledby="tib-tab" tabindex="0">
-                                        {% if selected_entry["tabs"]["tib"] %}
-                                            {% for item in selected_entry["tabs"]["tib"] %}
-                                            <div class="definition-block">
-                                                <div class="meta-row">
-                                                    <span class="meta-label">Source</span>
-                                                    <span class="meta-value">{{ item["source"] }}</span>
-                                                </div>
-                                                <div class="meta-row">
-                                                    <span class="meta-label">Contexte</span>
-                                                    <span class="meta-value">{{ item["contexte"] }}</span>
-                                                </div>
-                                                <div class="definition-html tibetan-content">
-                                                    {{ item["definition"] | safe }}
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        {% else %}
-                                            <div class="empty-tab">Aucune définition tibétaine.</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 {% elif q or selected_sources %}
-                <div class="alert alert-warning shadow-sm" role="alert">
-                    Aucun résultat trouvé.
-                </div>
+                    <div class="alert alert-warning shadow-sm" role="alert">
+                        Aucun résultat trouvé.
+                    </div>
                 {% else %}
-                <div class="alert alert-light border shadow-sm" role="alert">
-                    Saisissez un terme et utilisez les filtres de sources si nécessaire.
-                </div>
+                    <div class="alert alert-light border shadow-sm" role="alert">
+                        Saisissez un terme et utilisez les filtres de sources si nécessaire.
+                    </div>
                 {% endif %}
             </div>
         </div>
     </main>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         (function () {
-            const dropdown = document.getElementById('sourceDropdown');
-            const toggle = document.getElementById('sourceDropdownToggle');
-            const menu = document.getElementById('sourceDropdownMenu');
-            const label = document.getElementById('sourceDropdownLabel');
-            const checkboxes = () => Array.from(document.querySelectorAll('.source-checkbox'));
-            const selectAllBtn = document.getElementById('selectAllSources');
-            const clearAllBtn = document.getElementById('clearAllSources');
+            const dropdown = document.getElementById("sourceDropdown");
+            const toggle = document.getElementById("sourceDropdownToggle");
+            const label = document.getElementById("sourceDropdownLabel");
+            const checkboxes = Array.from(document.querySelectorAll(".source-checkbox"));
+            const selectAllBtn = document.getElementById("selectAllSources");
+            const clearAllBtn = document.getElementById("clearAllSources");
 
-            function updateLabel() {
-                const checked = checkboxes().filter(cb => cb.checked);
-                if (checked.length === 0) {
-                    label.textContent = 'Sélectionner une ou plusieurs sources';
-                } else if (checked.length === 1) {
-                    const one = checked[0].parentElement.querySelector('label');
-                    label.textContent = one ? one.textContent.trim() : '1 source sélectionnée';
-                } else {
-                    label.textContent = checked.length + ' sources sélectionnées';
-                }
+            if (!dropdown || !toggle || !label) {
+                return;
             }
 
-            toggle.addEventListener('click', function (e) {
+            function getCheckboxLabel(checkbox) {
+                const wrapper = checkbox.closest(".source-option");
+                if (!wrapper) return "";
+                const labelEl = wrapper.querySelector("label");
+                return labelEl ? labelEl.textContent.trim() : "";
+            }
+
+            function updateLabel() {
+                const checked = checkboxes.filter((cb) => cb.checked);
+
+                if (checked.length === 0) {
+                    label.textContent = "Sélectionner une ou plusieurs sources";
+                    return;
+                }
+
+                if (checked.length === 1) {
+                    label.textContent = getCheckboxLabel(checked[0]) || "1 source sélectionnée";
+                    return;
+                }
+
+                label.textContent = `${checked.length} sources sélectionnées`;
+            }
+
+            toggle.addEventListener("click", function (e) {
                 e.preventDefault();
-                dropdown.classList.toggle('open');
-                toggle.setAttribute('aria-expanded', dropdown.classList.contains('open') ? 'true' : 'false');
+                dropdown.classList.toggle("open");
+                toggle.setAttribute("aria-expanded", dropdown.classList.contains("open") ? "true" : "false");
             });
 
-            document.addEventListener('click', function (e) {
+            document.addEventListener("click", function (e) {
                 if (!dropdown.contains(e.target)) {
-                    dropdown.classList.remove('open');
-                    toggle.setAttribute('aria-expanded', 'false');
+                    dropdown.classList.remove("open");
+                    toggle.setAttribute("aria-expanded", "false");
                 }
             });
 
-            checkboxes().forEach(cb => {
-                cb.addEventListener('change', updateLabel);
+            checkboxes.forEach((cb) => {
+                cb.addEventListener("change", updateLabel);
             });
 
-            selectAllBtn.addEventListener('click', function () {
-                checkboxes().forEach(cb => cb.checked = true);
-                updateLabel();
-            });
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener("click", function () {
+                    checkboxes.forEach((cb) => {
+                        cb.checked = true;
+                    });
+                    updateLabel();
+                });
+            }
 
-            clearAllBtn.addEventListener('click', function () {
-                checkboxes().forEach(cb => cb.checked = false);
-                updateLabel();
-            });
+            if (clearAllBtn) {
+                clearAllBtn.addEventListener("click", function () {
+                    checkboxes.forEach((cb) => {
+                        cb.checked = false;
+                    });
+                    updateLabel();
+                });
+            }
 
             updateLabel();
         })();
