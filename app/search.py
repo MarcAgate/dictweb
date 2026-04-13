@@ -162,6 +162,35 @@ def build_entries_from_rows(rows) -> List[Dict[str, Any]]:
     return sort_entries_by_tibetan(entries)
 
 
+def fetch_source_labels_map() -> Dict[str, str]:
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT code, label
+            FROM sources
+            ORDER BY code ASC
+            """
+        )
+        rows = cur.fetchall()
+
+        mapping: Dict[str, str] = {}
+
+        for row in rows:
+            code = (row["code"] or "").strip()
+            label = (row["label"] or "").strip()
+
+            if not code:
+                continue
+
+            mapping[code] = f"{code} ({label})" if label else code
+
+        return mapping
+    finally:
+        conn.close()
+
+
 def build_tabs_for_wylie(rows, selected_wylie: str) -> Dict[str, List[Dict[str, Any]]]:
     tabs: Dict[str, List[Dict[str, Any]]] = {
         "fr": [],
@@ -169,15 +198,19 @@ def build_tabs_for_wylie(rows, selected_wylie: str) -> Dict[str, List[Dict[str, 
         "tib": [],
     }
 
+    source_labels = fetch_source_labels_map()
+
     for row in rows:
         row_wylie = (row["wylie"] or "").strip()
         if row_wylie != selected_wylie:
             continue
 
         lang_value = (row["lang"] or "").strip().upper()
+        source_code = (row["source"] or "").strip()
 
         item = {
-            "source": row["source"] or "",
+            "source": source_code,
+            "source_display": source_labels.get(source_code, source_code),
             "contexte": row["contexte"] or "",
             "definition": row["defWeb"] or "",
             "lang": lang_value,

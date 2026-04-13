@@ -70,25 +70,29 @@ def split_tibetan_base_and_suffix(tibetan_text: str) -> tuple[str, str]:
     return base, suffix
 
 
-def replace_tibetan_with_links_in_text(text: str, known_wylie: set[str]) -> str:
-    def replacer(match):
-        tibetan_text = match.group(0)
-        base_text, trailing_suffix = split_tibetan_base_and_suffix(tibetan_text)
+def render_tibetan_segment(tibetan_text: str, known_wylie: set[str]) -> str:
+    base_text, trailing_suffix = split_tibetan_base_and_suffix(tibetan_text)
 
-        if not base_text:
-            return tibetan_text
+    if not base_text:
+        return tibetan_text
 
-        try:
-            normalized_wylie = converter.toWylie(base_text).strip()
-        except Exception:
-            return tibetan_text
+    try:
+        normalized_wylie = converter.toWylie(base_text).strip()
+    except Exception:
+        return f'<span class="tibetan">{tibetan_text}</span>'
 
-        if normalized_wylie not in known_wylie:
-            return tibetan_text
-
+    if normalized_wylie in known_wylie:
         sig = sign_search_term(base_text)
         href = f"/search?q={quote_plus(base_text)}&match_mode=exact&sig={sig}"
-        return f'<a href="{href}" class="def-term-link">{base_text}</a>{trailing_suffix}'
+        return f'<a href="{href}" class="def-term-link tibetan">{base_text}</a>{trailing_suffix}'
+
+    return f'<span class="tibetan">{base_text}</span>{trailing_suffix}'
+
+
+def replace_tibetan_markup_in_text(text: str, known_wylie: set[str]) -> str:
+    def replacer(match):
+        tibetan_text = match.group(0)
+        return render_tibetan_segment(tibetan_text, known_wylie)
 
     return TIBETAN_RUN_RE.sub(replacer, text or "")
 
@@ -101,7 +105,7 @@ def build_defweb(definition: str, known_wylie: set[str]) -> str:
         if chunk.startswith("<"):
             parts.append(chunk)
         else:
-            parts.append(replace_tibetan_with_links_in_text(chunk, known_wylie))
+            parts.append(replace_tibetan_markup_in_text(chunk, known_wylie))
 
     return "".join(parts).strip()
 

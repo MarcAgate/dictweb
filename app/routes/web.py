@@ -56,8 +56,8 @@ def ensure_internal_get_request(request: Request, q: str, sig: str) -> None:
     if not is_valid_search_signature(q, sig):
         raise HTTPException(status_code=403, detail="Signature de lien invalide.")
 
-    origin = request.headers.get("origin", "").strip()
-    referer = request.headers.get("referer", "").strip()
+    origin = (request.headers.get("origin") or "").strip()
+    referer = (request.headers.get("referer") or "").strip()
 
     if origin:
         if not _same_origin(origin, request):
@@ -150,18 +150,22 @@ def search_page(
             selected_key=selected_key,
         )
 
+        selected_entry = view_data["selected_entry"]
+        selected_entry_tabs = selected_entry["tabs"] if selected_entry else {"fr": [], "eng": [], "tib": []}
+
         return templates.TemplateResponse(
             request=request,
             name="search.html",
             context={
                 "q": q,
-                "match_mode": match_mode,
-                "selected_key": view_data["selected_key"],
+                "matchmode": match_mode,
+                "selectedkey": view_data["selected_key"],
                 "entries": view_data["entries"],
-                "selected_entry": view_data["selected_entry"],
-                "result_count": view_data["result_count"],
-                "sources_grouped": sources_grouped,
-                "selected_sources": [],
+                "selectedentry": selected_entry,
+                "selectedentrytabs": selected_entry_tabs,
+                "resultcount": view_data["result_count"],
+                "sourcesgrouped": sources_grouped,
+                "selectedsources": [],
             },
         )
 
@@ -170,13 +174,14 @@ def search_page(
         name="search.html",
         context={
             "q": "",
-            "match_mode": "exact",
-            "selected_key": "",
+            "matchmode": "exact",
+            "selectedkey": "",
             "entries": [],
-            "selected_entry": None,
-            "result_count": 0,
-            "sources_grouped": sources_grouped,
-            "selected_sources": [],
+            "selectedentry": None,
+            "selectedentrytabs": {"fr": [], "eng": [], "tib": []},
+            "resultcount": 0,
+            "sourcesgrouped": sources_grouped,
+            "selectedsources": [],
         },
     )
 
@@ -203,17 +208,21 @@ def search_submit(
         selected_key=selected_key,
     )
 
+    selected_entry = view_data["selected_entry"]
+    selected_entry_tabs = selected_entry["tabs"] if selected_entry else {"fr": [], "eng": [], "tib": []}
+
     return templates.TemplateResponse(
         request=request,
         name="search.html",
         context={
             "q": q,
-            "match_mode": match_mode,
-            "selected_key": view_data["selected_key"],
+            "matchmode": match_mode,
+            "selectedkey": view_data["selected_key"],
             "entries": view_data["entries"],
-            "selected_entry": view_data["selected_entry"],
-            "result_count": view_data["result_count"],
-            "sources_grouped": sources_grouped,
-            "selected_sources": sources,
+            "selectedentry": selected_entry,
+            "selectedentrytabs": selected_entry_tabs,
+            "resultcount": view_data["result_count"],
+            "sourcesgrouped": sources_grouped,
+            "selectedsources": sources,
         },
     )
