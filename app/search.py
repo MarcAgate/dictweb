@@ -34,6 +34,22 @@ def build_wylie_condition(normalized: str, match_mode: str):
     return "wylie LIKE ?", [f"%{normalized}%"]
 
 
+def normalize_sources(sources: Optional[List[str]]) -> List[str]:
+    cleaned: List[str] = []
+    seen = set()
+
+    for src in sources or []:
+        value = (src or "").strip()
+        if not value:
+            continue
+        if value in seen:
+            continue
+        seen.add(value)
+        cleaned.append(value)
+
+    return cleaned
+
+
 def get_sort_tibetan_key(entry: Dict[str, Any]) -> str:
     tib = (entry.get("tib") or "").strip()
     wylie = (entry.get("wylie") or "").strip()
@@ -113,10 +129,10 @@ def fetch_search_rows(
         query += f" AND {condition}"
         params.extend(condition_params)
 
-    clean_sources = [src.strip() for src in (sources or []) if src and src.strip()]
+    clean_sources = normalize_sources(sources)
     if clean_sources:
         placeholders = ",".join("?" for _ in clean_sources)
-        query += f" AND source IN ({placeholders})"
+        query += f" AND TRIM(source) IN ({placeholders})"
         params.extend(clean_sources)
 
     if lang.strip():
@@ -184,7 +200,7 @@ def fetch_source_labels_map() -> Dict[str, str]:
             if not code:
                 continue
 
-            mapping[code] = f"{code} ({label})" if label else code
+            mapping[code] = f"({code}) {label}" if label else code
 
         return mapping
     finally:

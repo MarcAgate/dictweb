@@ -147,10 +147,10 @@
 
                             <div class="col-12 col-md-4 col-xl-3">
                                 <label for="matchmode" class="form-label">Mode de recherche</label>
-                                <select id="matchmode" name="matchmode" class="form-select">
-                                    <option value="contains" {% if matchmode == 'contains' %}selected{% endif %}>Contient</option>
-                                    <option value="starts_with" {% if matchmode == 'starts_with' %}selected{% endif %}>Commence par</option>
-                                    <option value="exact" {% if matchmode == 'exact' %}selected{% endif %}>Exact</option>
+                                <select id="matchmode" name="match_mode" class="form-select">
+                                    <option value="contains" {% if matchmode == "contains" %}selected{% endif %}>Contient</option>
+                                    <option value="starts_with" {% if matchmode == "starts_with" %}selected{% endif %}>Commence par</option>
+                                    <option value="exact" {% if matchmode == "exact" %}selected{% endif %}>Exact</option>
                                 </select>
                             </div>
 
@@ -288,8 +288,8 @@
                                             {% for entry in entries %}
                                                 <form method="post" action="{{ url_for('search_submit') }}" class="term-select-form">
                                                     <input type="hidden" name="q" value="{{ q or '' }}" />
-                                                    <input type="hidden" name="matchmode" value="{{ matchmode or 'exact' }}" />
-                                                    <input type="hidden" name="selectedkey" value="{{ entry.key }}" />
+                                                    <input type="hidden" name="match_mode" value="{{ matchmode or 'exact' }}" />
+                                                    <input type="hidden" name="selected_key" value="{{ entry.key }}" />
                                                     {% for src_code in selectedsources %}
                                                         <input type="hidden" name="sources" value="{{ src_code }}" />
                                                     {% endfor %}

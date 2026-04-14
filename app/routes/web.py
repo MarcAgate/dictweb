@@ -130,6 +130,7 @@ def search_page(
     request: Request,
     q: str = Query(""),
     match_mode: str = Query("exact"),
+    sources: List[str] = Query([]),
     selected_key: str = Query(""),
     sig: str = Query(""),
 ):
@@ -144,7 +145,7 @@ def search_page(
         view_data = prepare_search_view_data(
             term=q,
             match_mode=match_mode,
-            sources=[],
+            sources=sources,
             lang="",
             contexte="",
             selected_key=selected_key,
@@ -165,7 +166,7 @@ def search_page(
                 "selectedentrytabs": selected_entry_tabs,
                 "resultcount": view_data["result_count"],
                 "sourcesgrouped": sources_grouped,
-                "selectedsources": [],
+                "selectedsources": sources,
             },
         )
 
