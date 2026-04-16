@@ -5,8 +5,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.routes.web import router as web_router
 
-app = FastAPI(title="Dict Web")
 
+app = FastAPI(title="Dict Web", debug=True)
 app.add_middleware(
     SessionMiddleware,
     secret_key="CHANGEZ-MOI-PLUS-TARD",

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Éditer une entrée</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', path='styles.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', path='tinymce/tinymce.min.js') }}"></script>
+
+    <style>
+        .editor-shell {
+            border: 1px solid #dee2e6;
+            border-radius: 0.85rem;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .editor-modebar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 0.9rem;
+            border-bottom: 1px solid #eef2f7;
+            background: #f8fafc;
+            flex-wrap: wrap;
+        }
+
+        .editor-pane {
+            padding: 0;
+        }
+
+        .editor-pane.is-hidden {
+            display: none;
+        }
+
+        #definition-source {
+            min-height: 420px;
+            border: 0;
+            border-radius: 0;
+            resize: vertical;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.95rem;
+            line-height: 1.55;
+        }
+
+        .tox.tox-tinymce {
+            border: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .editor-help {
+            font-size: 0.92rem;
+            color: #64748b;
+        }
+
+        .readonly-box {
+            background: #f8fafc;
+            border: 1px solid #e9ecef;
+            border-radius: 0.75rem;
+            padding: 0.85rem 1rem;
+        }
+
+        .readonly-box code {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body class="app-body">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-semibold" href="{{ url_for('home') }}">DictWeb</a>
+            <div class="d-flex align-items-center gap-3">
+                <a class="nav-link" href="{{ url_for('home') }}">Accueil</a>
+                <a class="nav-link" href="{{ return_to_search_url }}">Retour à la recherche</a>
+                <a class="nav-link text-danger" href="{{ url_for('logout') }}">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid px-4 py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-10">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                    <div>
+                        <h1 class="page-title mb-1">Éditer une entrée</h1>
+                        <p class="page-subtitle mb-0">
+                            Mode source ou mode visuel, avec HTML éditable via TinyMCE.
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ return_to_search_url }}" class="btn btn-outline-secondary">Retour à la recherche</a>
+                    </div>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger shadow-sm" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                {% if success %}
+                <div class="alert alert-success shadow-sm" role="alert">
+                    {{ success }}
+                </div>
+                {% endif %}
+
+                <div class="row g-4">
+                    <div class="col-12 col-lg-4">
+                        <div class="card border-0 shadow-sm side-panel h-100">
+                            <div class="card-body p-4">
+                                <h2 class="h5 mb-3">Informations</h2>
+
+                                <div class="meta-row"><span class="meta-label">ID</span><span class="meta-value">{{ entry.id }}</span></div>
+                                <div class="meta-row"><span class="meta-label">Source</span><span class="meta-value">{{ entry.source }}</span></div>
+                                <div class="meta-row"><span class="meta-label">Langue</span><span class="meta-value">{{ entry.lang }}</span></div>
+
+                                <hr>
+
+                                <div class="mb-3">
+                                    <div class="meta-label mb-1">Tibétain</div>
+                                    <div class="detail-tib mb-0">{{ entry.tib }}</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="meta-label mb-1">Wylie</div>
+                                    <div class="detail-wylie"><code>{{ entry.wylie }}</code></div>
+                                </div>
+
+                                <div class="mb-0">
+                                    <div class="meta-label mb-1">Contexte actuel</div>
+                                    <div class="readonly-box">{{ entry.contexte or "—" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-8">
+                        <div class="card border-0 shadow-sm detail-panel">
+                            <div class="card-body p-4">
+                                <form method="post" action="{{ url_for('edit_entry_submit', entry_id=entry.id) }}" id="editEntryForm" class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <label for="contexte" class="form-label fw-semibold">Contexte existant</label>
+                                        <select id="contexte" name="contexte" class="form-select">
+                                            <option value="">-- Sélectionner un contexte --</option>
+                                            {% for ctx in context_choices %}
+                                            <option value="{{ ctx }}" {% if ctx == entry.contexte %}selected{% endif %}>{{ ctx }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label for="other_contexte" class="form-label fw-semibold">Autre contexte</label>
+                                        <input
+                                            type="text"
+                                            id="other_contexte"
+                                            name="other_contexte"
+                                            class="form-control"
+                                            placeholder="Saisir un nouveau contexte"
+                                        >
+                                        <div class="form-text">
+                                            Si ce champ est rempli, il remplace la valeur choisie dans la liste.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                            <label class="form-label fw-semibold mb-0">Définition source (`def`)</label>
+                                            <div class="btn-group" role="group" aria-label="Mode d’édition">
+                                                <input type="radio" class="btn-check" name="editor_mode" id="mode-source" autocomplete="off">
+                                                <label class="btn btn-outline-secondary btn-sm" for="mode-source">Source</label>
+
+                                                <input type="radio" class="btn-check" name="editor_mode" id="mode-visual" autocomplete="off" checked>
+                                                <label class="btn btn-outline-secondary btn-sm" for="mode-visual">Visuel</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="editor-shell">
+                                            <div class="editor-modebar">
+                                                <span class="badge text-bg-light border">Champ enregistré : <code>def</code></span>
+                                                <span class="editor-help">En mode visuel, utilise aussi le bouton <strong>code</strong> de TinyMCE pour éditer le HTML.</span>
+                                            </div>
+
+                                            <div id="source-pane" class="editor-pane is-hidden">
+                                                <textarea
+                                                    id="definition-source"
+                                                    name="definition"
+                                                    class="form-control"
+                                                    rows="18"
+                                                    required
+                                                >{{ entry.def }}</textarea>
+                                            </div>
+
+                                            <div id="visual-pane" class="editor-pane">
+                                                <textarea id="definition-visual">{{ entry.def }}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                            <label class="form-label fw-semibold mb-0">Aperçu actuel de `defWeb`</label>
+                                            <span class="badge text-bg-light border">Lecture seule</span>
+                                        </div>
+
+                                        <div class="definition-html">
+                                            {% if entry.defWeb %}
+                                                {{ entry.defWeb | safe }}
+                                            {% else %}
+                                                <span class="text-muted">Aucun contenu généré dans defWeb.</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="form-text mt-2">
+                                            Cet aperçu reflète la dernière version générée de <code>defWeb</code>. Après sauvegarde, il pourra être régénéré depuis <code>def</code>.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button type="submit" class="btn btn-primary px-4">Enregistrer</button>
+                                            <a href="{{ return_to_search_url }}" class="btn btn-outline-secondary">Annuler</a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const sourceModeInput = document.getElementById('mode-source');
+        const visualModeInput = document.getElementById('mode-visual');
+        const sourcePane = document.getElementById('source-pane');
+        const visualPane = document.getElementById('visual-pane');
+        const sourceTextarea = document.getElementById('definition-source');
+        const form = document.getElementById('editEntryForm');
+
+        let editorReady = false;
+
+        function showSourceMode() {
+            if (editorReady && tinymce.get('definition-visual')) {
+                sourceTextarea.value = tinymce.get('definition-visual').getContent({ format: 'html' });
+            }
+            sourcePane.classList.remove('is-hidden');
+            visualPane.classList.add('is-hidden');
+        }
+
+        function showVisualMode() {
+            visualPane.classList.remove('is-hidden');
+            sourcePane.classList.add('is-hidden');
+
+            if (editorReady && tinymce.get('definition-visual')) {
+                tinymce.get('definition-visual').setContent(sourceTextarea.value || '');
+            }
+        }
+
+        tinymce.init({
+            selector: '#definition-visual',
+            license_key: 'gpl',
+            menubar: true,
+            height: 520,
+            plugins: 'code link lists table autoresize preview visualblocks fullscreen',
+            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | link table | visualblocks code preview fullscreen',
+            branding: false,
+            promotion: false,
+            browser_spellcheck: true,
+            contextmenu: false,
+            convert_urls: false,
+            relative_urls: false,
+            remove_script_host: false,
+            content_style: `
+                body {
+                    font-family: "Source Serif 4", Georgia, serif;
+                    font-size: 16px;
+                    line-height: 1.7;
+                    padding: 1rem;
+                }
+            `,
+            setup: function (editor) {
+                editor.on('init', function () {
+                    editorReady = true;
+                    editor.setContent(sourceTextarea.value || '');
+                });
+
+                editor.on('change input undo redo', function () {
+                    sourceTextarea.value = editor.getContent({ format: 'html' });
+                });
+            }
+        });
+
+        sourceModeInput.addEventListener('change', function () {
+            if (this.checked) {
+                showSourceMode();
+            }
+        });
+
+        visualModeInput.addEventListener('change', function () {
+            if (this.checked) {
+                showVisualMode();
+            }
+        });
+
+        form.addEventListener('submit', function () {
+            if (editorReady && tinymce.get('definition-visual') && visualModeInput.checked) {
+                sourceTextarea.value = tinymce.get('definition-visual').getContent({ format: 'html' });
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

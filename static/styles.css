@@ -2,7 +2,8 @@
 
 :root {
   --def-bg: #f7f6f2;
-  --def-surface: #f9f8f5;
+  /*--def-surface: #f9f8f5;*/
+  --def-surface: #F5F7F7;
   --def-border: #d4d1ca;
   --def-text: #28251d;
   --def-text-soft: #5a5750;
@@ -33,7 +34,7 @@
 }
 
 body.app-body {
-  background-color: #f6f8fb;
+  background-color: #f6f8fb;  
   color: #1f2937;
 }
 
@@ -463,7 +464,7 @@ body.app-body {
 
 .definition-block {
   padding: 1rem 0 1.25rem 0;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;  
 }
 
 .definition-block:last-child {

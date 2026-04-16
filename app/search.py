@@ -225,10 +225,12 @@ def build_tabs_for_wylie(rows, selected_wylie: str) -> Dict[str, List[Dict[str, 
         source_code = (row["source"] or "").strip()
 
         item = {
+            "id": row["id"],
             "source": source_code,
             "source_display": source_labels.get(source_code, source_code),
             "contexte": row["contexte"] or "",
             "definition": row["defWeb"] or "",
+            "def_source": row["def"] or "",
             "lang": lang_value,
             "tib": row["tib"] or "",
             "wylie": row["wylie"] or "",
@@ -287,6 +289,84 @@ def prepare_search_view_data(
         "selected_key": selected_wylie,
         "result_count": len(entries),
     }
+
+def fetch_entry_by_id(entry_id: int) -> Optional[Dict[str, Any]]:
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+                id,
+                tib,
+                wylie,
+                source,
+                contexte,
+                lang,
+                def,
+                defWeb
+            FROM dict
+            WHERE id = ?
+            """,
+            (entry_id,),
+        )
+        row = cur.fetchone()
+
+        if row is None:
+            return None
+
+        return {
+            "id": row["id"],
+            "tib": row["tib"] or "",
+            "wylie": row["wylie"] or "",
+            "source": (row["source"] or "").strip(),
+            "contexte": row["contexte"] or "",
+            "lang": (row["lang"] or "").strip(),
+            "def": row["def"] or "",
+            "defWeb": row["defWeb"] or "",
+        }
+    finally:
+        conn.close()
+
+
+def fetch_context_choices() -> List[str]:
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT DISTINCT TRIM(contexte) AS contexte
+            FROM dict
+            WHERE contexte IS NOT NULL
+              AND TRIM(contexte) <> ''
+            ORDER BY TRIM(contexte) ASC
+            """
+        )
+        rows = cur.fetchall()
+        return [row["contexte"] for row in rows if row["contexte"]]
+    finally:
+        conn.close()
+
+
+def update_entry_definition(entry_id: int, contexte: str, definition: str) -> bool:
+    cleaned_contexte = (contexte or "").strip()
+    cleaned_definition = (definition or "").strip()
+
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE dict
+            SET contexte = ?, def = ?
+            WHERE id = ?
+            """,
+            (cleaned_contexte, cleaned_definition, entry_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
 
 
 def fetch_sources_grouped() -> Dict[str, List[Dict[str, Any]]]:
