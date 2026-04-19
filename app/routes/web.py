@@ -16,6 +16,7 @@ from app.search import (
     fetch_sources_grouped,
     prepare_search_view_data,
     update_entry_definition,
+    delete_entry,
 )
 
 router = APIRouter()
@@ -33,20 +34,55 @@ def sign_search_term(term: str) -> str:
     ).hexdigest()
 
 
+def build_signed_search_query_params(
+    q: str = "",
+    match_mode: str = "exact",
+    selected_key: str = "",
+    sources: List[str] | None = None,
+) -> dict:
+    q = (q or "").strip()
+    params = {
+        "q": q,
+        "match_mode": match_mode or "exact",
+        "selected_key": selected_key or "",
+    }
+
+    if sources:
+        params["sources"] = sources
+
+    if q:
+        params["sig"] = sign_search_term(q)
+
+    return params
+
+
+def build_signed_search_url(
+    request: Request,
+    q: str = "",
+    match_mode: str = "exact",
+    selected_key: str = "",
+    sources: List[str] | None = None,
+) -> str:
+    params = build_signed_search_query_params(
+        q=q,
+        match_mode=match_mode,
+        selected_key=selected_key,
+        sources=sources,
+    )
+    return str(request.url_for("search_page").include_query_params(**params))
+
+
 def build_return_to_search_url(request: Request, entry: dict) -> str:
     wylie = (entry.get("wylie") or "").strip()
     if not wylie:
         return str(request.url_for("search_page"))
 
-    sig = sign_search_term(wylie)
-
-    return str(
-        request.url_for("search_page").include_query_params(
-            q=wylie,
-            match_mode="exact",
-            selected_key=wylie,
-            sig=sig,
-        )
+    return build_signed_search_url(
+        request=request,
+        q=wylie,
+        match_mode="exact",
+        selected_key=wylie,
+        sources=[],
     )
 
 
@@ -245,6 +281,73 @@ def edit_entry_submit(
     )
 
 
+@router.get("/entry/{entry_id}/delete", response_class=HTMLResponse, name="delete_entry_page")
+def delete_entry_page(
+    request: Request,
+    entry_id: int,
+    q: str = Query(""),
+    match_mode: str = Query("exact"),
+    sources: List[str] = Query([]),
+    selected_key: str = Query(""),
+    sig: str = Query(""),
+):
+    if not request.session.get("username"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    entry = fetch_entry_by_id(entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entrée introuvable.")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="delete_entry.html",
+        context={
+            "entry": entry,
+            "q": q,
+            "matchmode": match_mode,
+            "selectedsources": sources,
+            "selectedkey": selected_key,
+            "searchsig": sig or (sign_search_term(q) if (q or "").strip() else ""),
+            "return_to_search_url": build_signed_search_url(
+                request=request,
+                q=q,
+                match_mode=match_mode,
+                selected_key=selected_key,
+                sources=sources,
+            ) if (q or "").strip() else str(request.url_for("search_page")),
+        },
+    )
+
+
+@router.post("/entry/{entry_id}/delete", name="delete_entry_submit")
+def delete_entry_submit(
+    request: Request,
+    entry_id: int,
+    q: str = Form(""),
+    match_mode: str = Form("exact"),
+    sources: List[str] = Form([]),
+    selected_key: str = Form(""),
+):
+    if not request.session.get("username"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    entry = fetch_entry_by_id(entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entrée introuvable.")
+
+    delete_entry(entry_id)
+
+    redirect_url = build_signed_search_url(
+        request=request,
+        q=q,
+        match_mode=match_mode,
+        selected_key=selected_key,
+        sources=sources,
+    )
+
+    return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.get("/search", response_class=HTMLResponse, name="search_page")
 def search_page(
     request: Request,
@@ -269,10 +372,11 @@ def search_page(
                 "selectedkey": "",
                 "entries": [],
                 "selectedentry": None,
-                "selectedentrytabs": {"fr": [], "eng": [], "tib": []},
+                "selectedentrytabs": {"rime": [], "fr": [], "eng": [], "tib": []},
                 "resultcount": 0,
                 "sourcesgrouped": sources_grouped,
                 "selectedsources": [],
+                "searchsig": "",
             },
         )
 
@@ -288,7 +392,12 @@ def search_page(
     )
 
     selected_entry = view_data["selected_entry"]
-    selected_entry_tabs = selected_entry["tabs"] if selected_entry else {"fr": [], "eng": [], "tib": []}
+    selected_entry_tabs = selected_entry["tabs"] if selected_entry else {
+        "rime": [],
+        "fr": [],
+        "eng": [],
+        "tib": [],
+    }
 
     return templates.TemplateResponse(
         request=request,
@@ -303,6 +412,7 @@ def search_page(
             "resultcount": view_data["result_count"],
             "sourcesgrouped": sources_grouped,
             "selectedsources": sources,
+            "searchsig": sign_search_term(q) if q.strip() else "",
         },
     )
 
@@ -345,5 +455,6 @@ def search_submit(
             "resultcount": view_data["result_count"],
             "sourcesgrouped": sources_grouped,
             "selectedsources": sources,
+            "searchsig": sign_search_term(q) if q.strip() else "",
         },
     )

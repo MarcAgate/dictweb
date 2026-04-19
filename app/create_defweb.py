@@ -14,10 +14,10 @@ SEARCH_LINK_SECRET = os.getenv("DICTWEB_SEARCH_LINK_SECRET", "CHANGE-ME-SEARCH-L
 converter = pyewts.pyewts()
 
 TIBETAN_RUN_RE = re.compile(r"[\u0F00-\u0FFF]+")
-BODY_RE = re.compile(r"<body[^>]*>(.*?)</body>", re.IGNORECASE | re.DOTALL)
-HEAD_RE = re.compile(r"<head[^>]*>.*?</head>", re.IGNORECASE | re.DOTALL)
-SCRIPT_RE = re.compile(r"<script\b[^<]*(?:(?!</script>)<[^<]*)*</script>", re.IGNORECASE | re.DOTALL)
-STYLE_RE = re.compile(r"<style\b[^<]*(?:(?!</style>)<[^<]*)*</style>", re.IGNORECASE | re.DOTALL)
+BODY_RE = re.compile(r"<body\b[^>]*>(.*?)</body>", re.IGNORECASE | re.DOTALL)
+HEAD_RE = re.compile(r"<head\b[^>]*>.*?</head>", re.IGNORECASE | re.DOTALL)
+SCRIPT_RE = re.compile(r"<script\b[^>]*>.*?</script>", re.IGNORECASE | re.DOTALL)
+STYLE_RE = re.compile(r"<style\b[^>]*>.*?</style>", re.IGNORECASE | re.DOTALL)
 HTML_TAG_RE = re.compile(r"</?(html|body|head|meta|title|link|doctype)[^>]*>", re.IGNORECASE)
 TAG_RE = re.compile(r"(<[^>]+>|[^<]+)")
 TRAILING_TIBETAN_PUNCTUATION = "།༎༏༐༑༔"
@@ -70,23 +70,43 @@ def split_tibetan_base_and_suffix(tibetan_text: str) -> tuple[str, str]:
     return base, suffix
 
 
+def wrap_tibetan_plain(text: str) -> str:
+    return (
+        f'<span class="tibetan tibetan-plain" lang="bo" '
+        f'data-script="tibetan">{text}</span>'
+    )
+
+
+def wrap_tibetan_link(text: str, href: str) -> str:
+    return (
+        f'<a href="{href}" class="def-term-link tibetan" '
+        f'lang="bo" data-script="tibetan">{text}</a>'
+    )
+
+
 def render_tibetan_segment(tibetan_text: str, known_wylie: set[str]) -> str:
     base_text, trailing_suffix = split_tibetan_base_and_suffix(tibetan_text)
 
     if not base_text:
-        return tibetan_text
+        return wrap_tibetan_plain(tibetan_text)
 
     try:
         normalized_wylie = converter.toWylie(base_text).strip()
     except Exception:
-        return tibetan_text
+        return wrap_tibetan_plain(tibetan_text)
 
     if normalized_wylie in known_wylie:
         sig = sign_search_term(base_text)
         href = f"/search?q={quote_plus(base_text)}&match_mode=exact&sig={sig}"
-        return f'<a href="{href}" class="def-term-link">{base_text}</a>{trailing_suffix}'
+        linked = wrap_tibetan_link(base_text, href)
+        if trailing_suffix:
+            return f"{linked}{wrap_tibetan_plain(trailing_suffix)}"
+        return linked
 
-    return f"{base_text}{trailing_suffix}"
+    plain = wrap_tibetan_plain(base_text)
+    if trailing_suffix:
+        return f"{plain}{wrap_tibetan_plain(trailing_suffix)}"
+    return plain
 
 
 def replace_tibetan_markup_in_text(text: str, known_wylie: set[str]) -> str:
@@ -99,8 +119,8 @@ def replace_tibetan_markup_in_text(text: str, known_wylie: set[str]) -> str:
 
 def build_defweb(definition: str, known_wylie: set[str]) -> str:
     cleaned_html = extract_definition_html(definition)
-    parts = []
 
+    parts = []
     for chunk in TAG_RE.findall(cleaned_html):
         if chunk.startswith("<"):
             parts.append(chunk)
@@ -121,7 +141,6 @@ def update_defweb_for_entry(conn, entry_id: int, known_wylie: set[str]) -> bool:
         (entry_id,),
     )
     row = cur.fetchone()
-
     if row is None:
         return False
 

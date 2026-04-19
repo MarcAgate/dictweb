@@ -209,6 +209,7 @@ def fetch_source_labels_map() -> Dict[str, str]:
 
 def build_tabs_for_wylie(rows, selected_wylie: str) -> Dict[str, List[Dict[str, Any]]]:
     tabs: Dict[str, List[Dict[str, Any]]] = {
+        "rime": [],
         "fr": [],
         "eng": [],
         "tib": [],
@@ -230,14 +231,16 @@ def build_tabs_for_wylie(rows, selected_wylie: str) -> Dict[str, List[Dict[str, 
             "source_display": source_labels.get(source_code, source_code),
             "contexte": row["contexte"] or "",
             "definition": row["defWeb"] or "",
-            "def_source": row["def"] or "",
             "lang": lang_value,
             "tib": row["tib"] or "",
             "wylie": row["wylie"] or "",
         }
 
         if lang_value == "FR":
-            tabs["fr"].append(item)
+            if source_code == "RMY":
+                tabs["rime"].append(item)
+            else:
+                tabs["fr"].append(item)
         elif lang_value == "ENG":
             tabs["eng"].append(item)
         elif lang_value == "TIB":
@@ -347,6 +350,21 @@ def fetch_context_choices() -> List[str]:
     finally:
         conn.close()
 
+def delete_entry(entry_id: int) -> bool:
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            DELETE FROM dict
+            WHERE id = ?
+            """,
+            (entry_id,),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
 
 def update_entry_definition(entry_id: int, contexte: str, definition: str) -> bool:
     cleaned_contexte = (contexte or "").strip()
