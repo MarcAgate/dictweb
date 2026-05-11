@@ -6,23 +6,27 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from app.ui import templates
 
 from app.auth import authenticate_user
 from app.create_defweb import regenerate_defweb_for_entry
 from app.search import (
+    build_empty_entry_form_data,
+    create_entry,
+    delete_entry,
     fetch_context_choices,
     fetch_entry_by_id,
     fetch_sources_grouped,
     prepare_search_view_data,
     update_entry_definition,
-    delete_entry,
 )
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
-SEARCH_LINK_SECRET = os.getenv("DICTWEB_SEARCH_LINK_SECRET", "CHANGE-ME-SEARCH-LINK-SECRET")
+SEARCH_LINK_SECRET = os.getenv(
+    "DICTWEB_SEARCH_LINK_SECRET",
+    "CHANGE-ME-SEARCH-LINK-SECRET",
+)
 
 
 def sign_search_term(term: str) -> str:
@@ -183,6 +187,125 @@ def login_submit(
 def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/entry/create", response_class=HTMLResponse, name="create_entry_page")
+def create_entry_page(request: Request):
+    if not request.session.get("username"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="create_entry.html",
+        context={
+            "entry": build_empty_entry_form_data(),
+            "context_choices": fetch_context_choices(),
+            "sources_grouped": fetch_sources_grouped(),
+            "error": None,
+            "success": None,
+            "return_to_search_url": str(request.url_for("search_page")),
+        },
+    )
+
+
+@router.post("/entry/create", response_class=HTMLResponse, name="create_entry_submit")
+def create_entry_submit(
+    request: Request,
+    tib: str = Form(""),
+    wylie: str = Form(""),
+    source: str = Form(""),
+    contexte: str = Form(""),
+    other_contexte: str = Form(""),
+    lang: str = Form("FR"),
+    definition: str = Form(""),
+):
+    if not request.session.get("username"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    final_contexte = (other_contexte or "").strip() or (contexte or "").strip()
+
+    entry_data = {
+        "tib": tib,
+        "wylie": wylie,
+        "source": source,
+        "contexte": final_contexte,
+        "lang": lang,
+        "def": definition,
+    }
+
+    if not (wylie or "").strip():
+        return templates.TemplateResponse(
+            request=request,
+            name="create_entry.html",
+            context={
+                "entry": entry_data,
+                "context_choices": fetch_context_choices(),
+                "sources_grouped": fetch_sources_grouped(),
+                "error": "Le champ Wylie est requis.",
+                "success": None,
+                "return_to_search_url": str(request.url_for("search_page")),
+            },
+            status_code=400,
+        )
+
+    if not final_contexte:
+        return templates.TemplateResponse(
+            request=request,
+            name="create_entry.html",
+            context={
+                "entry": entry_data,
+                "context_choices": fetch_context_choices(),
+                "sources_grouped": fetch_sources_grouped(),
+                "error": "Le contexte est requis.",
+                "success": None,
+                "return_to_search_url": str(request.url_for("search_page")),
+            },
+            status_code=400,
+        )
+
+    if not (definition or "").strip():
+        return templates.TemplateResponse(
+            request=request,
+            name="create_entry.html",
+            context={
+                "entry": entry_data,
+                "context_choices": fetch_context_choices(),
+                "sources_grouped": fetch_sources_grouped(),
+                "error": "La définition est requise.",
+                "success": None,
+                "return_to_search_url": str(request.url_for("search_page")),
+            },
+            status_code=400,
+        )
+
+    try:
+        new_entry_id = create_entry(
+            tib=tib,
+            wylie=wylie,
+            source=source,
+            contexte=final_contexte,
+            lang=lang,
+            definition=definition,
+        )
+    except ValueError as exc:
+        return templates.TemplateResponse(
+            request=request,
+            name="create_entry.html",
+            context={
+                "entry": entry_data,
+                "context_choices": fetch_context_choices(),
+                "sources_grouped": fetch_sources_grouped(),
+                "error": str(exc),
+                "success": None,
+                "return_to_search_url": str(request.url_for("search_page")),
+            },
+            status_code=400,
+        )
+
+    return RedirectResponse(
+        url=request.url_for("edit_entry_page", entry_id=new_entry_id),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.get("/entry/{entry_id}/edit", response_class=HTMLResponse, name="edit_entry_page")
@@ -440,7 +563,12 @@ def search_submit(
     )
 
     selected_entry = view_data["selected_entry"]
-    selected_entry_tabs = selected_entry["tabs"] if selected_entry else {"fr": [], "eng": [], "tib": []}
+    selected_entry_tabs = selected_entry["tabs"] if selected_entry else {
+        "rime": [],
+        "fr": [],
+        "eng": [],
+        "tib": [],
+    }
 
     return templates.TemplateResponse(
         request=request,

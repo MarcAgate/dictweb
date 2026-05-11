@@ -4,6 +4,7 @@ import pyewts
 from tibetan_sort.tibetan_sort import TibetanSort
 
 from app.db import get_connection
+from app.create_defweb import build_defweb
 
 converter = pyewts.pyewts()
 sorter = TibetanSort()
@@ -152,7 +153,6 @@ def fetch_search_rows(
         return cur.fetchall()
     finally:
         conn.close()
-
 
 def build_entries_from_rows(rows) -> List[Dict[str, Any]]:
     by_wylie: Dict[str, Dict[str, Any]] = {}
@@ -428,3 +428,75 @@ def fetch_sources_grouped() -> Dict[str, List[Dict[str, Any]]]:
         return grouped
     finally:
         conn.close()
+
+def create_entry(
+    tib: str,
+    wylie: str,
+    source: str,
+    contexte: str,
+    lang: str,
+    definition: str,
+) -> int:
+    cleaned_tib = (tib or "").strip()
+    cleaned_wylie = (wylie or "").strip()
+    cleaned_source = (source or "").strip()
+    cleaned_contexte = (contexte or "").strip()
+    cleaned_lang = (lang or "").strip().upper()
+    cleaned_definition = (definition or "").strip()
+
+    if not cleaned_wylie:
+        raise ValueError("Le champ Wylie est obligatoire.")
+
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            SELECT DISTINCT wylie
+            FROM dict
+            WHERE wylie IS NOT NULL
+              AND TRIM(wylie) <> ''
+            """
+        )
+        known_wylie = {
+            (row["wylie"] or "").strip()
+            for row in cur.fetchall()
+            if (row["wylie"] or "").strip()
+        }
+
+        if cleaned_wylie:
+            known_wylie.add(cleaned_wylie)
+
+        defweb = build_defweb(cleaned_definition, known_wylie)
+
+        cur.execute(
+            """
+            INSERT INTO dict (tib, wylie, source, contexte, lang, def, defWeb)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                cleaned_tib,
+                cleaned_wylie,
+                cleaned_source,
+                cleaned_contexte,
+                cleaned_lang,
+                cleaned_definition,
+                defweb,
+            ),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def build_empty_entry_form_data() -> Dict[str, str]:
+    return {
+        "tib": "",
+        "wylie": "",
+        "source": "",
+        "contexte": "",
+        "lang": "FR",
+        "definition": "",
+    }
