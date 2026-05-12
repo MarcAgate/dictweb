@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from app.ui import templates
 
 from app.auth import authenticate_user
 from app.create_defweb import regenerate_defweb_for_entry
@@ -20,6 +19,7 @@ from app.search import (
     prepare_search_view_data,
     update_entry_definition,
 )
+from app.ui import templates
 
 router = APIRouter()
 
@@ -27,6 +27,23 @@ SEARCH_LINK_SECRET = os.getenv(
     "DICTWEB_SEARCH_LINK_SECRET",
     "CHANGE-ME-SEARCH-LINK-SECRET",
 )
+
+
+def require_login(request: Request):
+    if not request.session.get("user_id"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    return None
+
+
+def require_role(request: Request, *allowed_roles: str):
+    login_redirect = require_login(request)
+    if login_redirect:
+        return login_redirect
+
+    role = request.session.get("role")
+    if role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Accès interdit.")
+    return None
 
 
 def sign_search_term(term: str) -> str:
@@ -141,15 +158,19 @@ def ensure_internal_get_request(request: Request, q: str, sig: str) -> None:
 
 @router.get("/", response_class=HTMLResponse, name="home")
 def home(request: Request):
-    username = request.session.get("username")
+    login_redirect = require_login(request)
+    if login_redirect:
+        return login_redirect
 
-    if not username:
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    username = request.session.get("username")
 
     return templates.TemplateResponse(
         request=request,
         name="home.html",
-        context={"username": username},
+        context={
+            "username": username,
+            "role": request.session.get("role"),
+        },
     )
 
 
@@ -168,14 +189,17 @@ def login_submit(
     username: str = Form(...),
     password: str = Form(...),
 ):
-    if not authenticate_user(username, password):
+    user = authenticate_user(username, password)
+    if not user:
         return templates.TemplateResponse(
             request=request,
             name="login.html",
             context={"error": "Identifiants invalides."},
         )
 
-    request.session["username"] = username
+    request.session["user_id"] = user["id"]
+    request.session["username"] = user["username"]
+    request.session["role"] = user["role"]
 
     return RedirectResponse(
         url=request.url_for("search_page"),
@@ -191,8 +215,9 @@ def logout(request: Request):
 
 @router.get("/entry/create", response_class=HTMLResponse, name="create_entry_page")
 def create_entry_page(request: Request):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    auth_result = require_role(request, "editor", "admin")
+    if auth_result:
+        return auth_result
 
     return templates.TemplateResponse(
         request=request,
@@ -204,6 +229,7 @@ def create_entry_page(request: Request):
             "error": None,
             "success": None,
             "return_to_search_url": str(request.url_for("search_page")),
+            "role": request.session.get("role"),
         },
     )
 
@@ -219,8 +245,9 @@ def create_entry_submit(
     lang: str = Form("FR"),
     definition: str = Form(""),
 ):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    auth_result = require_role(request, "editor", "admin")
+    if auth_result:
+        return auth_result
 
     final_contexte = (other_contexte or "").strip() or (contexte or "").strip()
 
@@ -244,6 +271,7 @@ def create_entry_submit(
                 "error": "Le champ Wylie est requis.",
                 "success": None,
                 "return_to_search_url": str(request.url_for("search_page")),
+                "role": request.session.get("role"),
             },
             status_code=400,
         )
@@ -259,6 +287,7 @@ def create_entry_submit(
                 "error": "Le contexte est requis.",
                 "success": None,
                 "return_to_search_url": str(request.url_for("search_page")),
+                "role": request.session.get("role"),
             },
             status_code=400,
         )
@@ -274,6 +303,7 @@ def create_entry_submit(
                 "error": "La définition est requise.",
                 "success": None,
                 "return_to_search_url": str(request.url_for("search_page")),
+                "role": request.session.get("role"),
             },
             status_code=400,
         )
@@ -298,6 +328,7 @@ def create_entry_submit(
                 "error": str(exc),
                 "success": None,
                 "return_to_search_url": str(request.url_for("search_page")),
+                "role": request.session.get("role"),
             },
             status_code=400,
         )
@@ -310,8 +341,9 @@ def create_entry_submit(
 
 @router.get("/entry/{entry_id}/edit", response_class=HTMLResponse, name="edit_entry_page")
 def edit_entry_page(request: Request, entry_id: int):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    auth_result = require_role(request, "editor", "admin")
+    if auth_result:
+        return auth_result
 
     entry = fetch_entry_by_id(entry_id)
     if entry is None:
@@ -326,6 +358,7 @@ def edit_entry_page(request: Request, entry_id: int):
             "error": None,
             "success": None,
             "return_to_search_url": build_return_to_search_url(request, entry),
+            "role": request.session.get("role"),
         },
     )
 
@@ -338,8 +371,9 @@ def edit_entry_submit(
     other_contexte: str = Form(""),
     definition: str = Form(""),
 ):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    auth_result = require_role(request, "editor", "admin")
+    if auth_result:
+        return auth_result
 
     entry = fetch_entry_by_id(entry_id)
     if entry is None:
@@ -361,7 +395,9 @@ def edit_entry_submit(
                 "error": "Le contexte est requis.",
                 "success": None,
                 "return_to_search_url": build_return_to_search_url(request, entry),
+                "role": request.session.get("role"),
             },
+            status_code=400,
         )
 
     if not (definition or "").strip():
@@ -378,7 +414,9 @@ def edit_entry_submit(
                 "error": "La définition est requise.",
                 "success": None,
                 "return_to_search_url": build_return_to_search_url(request, entry),
+                "role": request.session.get("role"),
             },
+            status_code=400,
         )
 
     update_entry_definition(
@@ -400,6 +438,7 @@ def edit_entry_submit(
             "error": None,
             "success": "Entrée enregistrée avec succès.",
             "return_to_search_url": build_return_to_search_url(request, refreshed_entry),
+            "role": request.session.get("role"),
         },
     )
 
@@ -414,8 +453,9 @@ def delete_entry_page(
     selected_key: str = Query(""),
     sig: str = Query(""),
 ):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    auth_result = require_role(request, "admin")
+    if auth_result:
+        return auth_result
 
     entry = fetch_entry_by_id(entry_id)
     if entry is None:
@@ -431,13 +471,18 @@ def delete_entry_page(
             "selectedsources": sources,
             "selectedkey": selected_key,
             "searchsig": sig or (sign_search_term(q) if (q or "").strip() else ""),
-            "return_to_search_url": build_signed_search_url(
-                request=request,
-                q=q,
-                match_mode=match_mode,
-                selected_key=selected_key,
-                sources=sources,
-            ) if (q or "").strip() else str(request.url_for("search_page")),
+            "return_to_search_url": (
+                build_signed_search_url(
+                    request=request,
+                    q=q,
+                    match_mode=match_mode,
+                    selected_key=selected_key,
+                    sources=sources,
+                )
+                if (q or "").strip()
+                else str(request.url_for("search_page"))
+            ),
+            "role": request.session.get("role"),
         },
     )
 
@@ -451,8 +496,9 @@ def delete_entry_submit(
     sources: List[str] = Form([]),
     selected_key: str = Form(""),
 ):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    auth_result = require_role(request, "admin")
+    if auth_result:
+        return auth_result
 
     entry = fetch_entry_by_id(entry_id)
     if entry is None:
@@ -480,8 +526,9 @@ def search_page(
     selected_key: str = Query(""),
     sig: str = Query(""),
 ):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    login_redirect = require_login(request)
+    if login_redirect:
+        return login_redirect
 
     sources_grouped = fetch_sources_grouped()
 
@@ -500,6 +547,7 @@ def search_page(
                 "sourcesgrouped": sources_grouped,
                 "selectedsources": [],
                 "searchsig": "",
+                "role": request.session.get("role"),
             },
         )
 
@@ -536,6 +584,7 @@ def search_page(
             "sourcesgrouped": sources_grouped,
             "selectedsources": sources,
             "searchsig": sign_search_term(q) if q.strip() else "",
+            "role": request.session.get("role"),
         },
     )
 
@@ -548,8 +597,9 @@ def search_submit(
     sources: List[str] = Form([]),
     selected_key: str = Form(""),
 ):
-    if not request.session.get("username"):
-        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    login_redirect = require_login(request)
+    if login_redirect:
+        return login_redirect
 
     sources_grouped = fetch_sources_grouped()
 
@@ -584,5 +634,6 @@ def search_submit(
             "sourcesgrouped": sources_grouped,
             "selectedsources": sources,
             "searchsig": sign_search_term(q) if q.strip() else "",
+            "role": request.session.get("role"),
         },
     )

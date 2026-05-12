@@ -17,11 +17,14 @@ def get_user_by_username(username: str):
     conn = get_connection()
     try:
         cur = conn.cursor()
-        cur.execute("""
-            SELECT id, username, password_hash, display_name, is_active
+        cur.execute(
+            """
+            SELECT id, username, password_hash, display_name, is_active, role
             FROM users
             WHERE username = ?
-        """, (username,))
+            """,
+            (username,),
+        )
         return cur.fetchone()
     finally:
         conn.close()

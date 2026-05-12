@@ -1,0 +1,1 @@
+python -m PyInstaller --onedir --name dictweb --paths . --add-data "static;static" --add-data "templates;templates" --add-data "MsTibTool.db;." --collect-submodules app --collect-submodules uvicorn --collect-submodules passlib run.py
