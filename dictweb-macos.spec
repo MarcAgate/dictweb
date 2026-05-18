@@ -1,59 +1,62 @@
-name: Build macOS app
+# -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_submodules
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
+hiddenimports = []
+hiddenimports += collect_submodules('app')
+hiddenimports += collect_submodules('uvicorn')
+hiddenimports += collect_submodules('passlib')
 
-jobs:
-  build-macos:
-    runs-on: macos-latest
+a = Analysis(
+    ['run_mac.py'],
+    pathex=['.'],
+    binaries=[],
+    datas=[
+        ('static', 'static'),
+        ('templates', 'templates'),
+        ('MsTibTool.db', '.'),
+    ],
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+pyz = PYZ(a.pure)
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name='dictweb',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=False,
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
 
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    upx_exclude=[],
+    name='dictweb',
+)
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Download SQLite database
-        run: |
-          rm -f MsTibTool.db
-          curl -fL "https://www.buddhawiki.net/MsTibTool.db" -o MsTibTool.db
-          test -f MsTibTool.db
-          test -s MsTibTool.db
-          file MsTibTool.db
-
-      - name: Build macOS app with PyInstaller
-        run: |
-          pyinstaller --clean --noconfirm dictweb-macos.spec
-
-      - name: Check build output
-        run: |
-          ls -la dist
-          test -d "dist/dictweb.app"
-
-      - name: Zip the macOS app
-        run: |
-          ditto -c -k --sequesterRsrc --keepParent "dist/dictweb.app" "dist/dictweb-macos.zip"
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dictweb-macos
-          path: dist/dictweb-macos.zip
-          if-no-files-found: error
-          overwrite: true
+app = BUNDLE(
+    coll,
+    name='dictweb.app',
+    icon=None,
+    bundle_identifier='com.toncompte.dictweb',
+)
