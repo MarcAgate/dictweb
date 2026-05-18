@@ -62,6 +62,45 @@ jobs:
           ls -la dist
           test -d "dist/dictweb.app"
 
+      - name: Start app for smoke test
+        run: |
+          python run.py > app.log 2>&1 &
+          echo $! > app.pid
+
+      - name: Wait for /login
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/login > /dev/null; then
+              echo "Login page is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server did not start in time"
+          cat app.log || true
+          exit 1
+
+      - name: Smoke test login
+        env:
+          TEST_USERNAME: ${{ secrets.DICTWEB_TEST_USERNAME }}
+          TEST_PASSWORD: ${{ secrets.DICTWEB_TEST_PASSWORD }}
+        run: |
+          code=$(curl -sS -L \
+            -c cookies.txt -b cookies.txt \
+            -o response.html \
+            -w "%{http_code}" \
+            -X POST "http://127.0.0.1:8000/login" \
+            -d "username=${TEST_USERNAME}" \
+            -d "password=${TEST_PASSWORD}")
+          echo "Final HTTP code: $code"
+          test "$code" = "200"
+
+      - name: Stop app
+        if: always()
+        run: |
+          kill $(cat app.pid) || true
+          cat app.log || true
+
       - name: Zip the macOS app
         run: |
           ditto -c -k --sequesterRsrc --keepParent "dist/dictweb.app" "dist/dictweb-macos.zip"
