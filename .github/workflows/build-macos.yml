@@ -21,9 +21,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Show Python version
-        run: python --version
-
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
@@ -31,6 +28,14 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install pyinstaller
+
+      - name: Download SQLite database
+        run: |
+          rm -f MsTibTool.db
+          curl -fL "https://www.buddhawiki.net/MsTibTool.db" -o MsTibTool.db
+          test -f MsTibTool.db
+          test -s MsTibTool.db
+          file MsTibTool.db
 
       - name: Build macOS app with PyInstaller
         run: |
