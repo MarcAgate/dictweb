@@ -16,6 +16,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Verify Python
+        run: |
+          which python
+          python --version
+          which pip
+          python -m pip --version
+
+      - name: Install MariaDB tools
+        run: |
+          brew update
+          brew install mariadb
+          which mariadb_config
+          mariadb_config --version
+
       - name: Install Python build tools
         run: |
           python -m pip install --upgrade pip
@@ -23,8 +42,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
+          python -m pip install --no-build-isolation -r requirements.txt
+          python -m pip install pyinstaller
 
       - name: Download SQLite database
         run: |
@@ -36,7 +55,7 @@ jobs:
 
       - name: Build macOS app with PyInstaller
         run: |
-          pyinstaller --clean --noconfirm dictweb-macos.spec
+          python -m PyInstaller --clean --noconfirm dictweb-macos.spec
 
       - name: Check build output
         run: |
