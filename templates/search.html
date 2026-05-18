@@ -110,8 +110,7 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm">
     <div class="container-fluid px-4">
       <a class="navbar-brand fw-semibold" href="{{ url_for('home') }}">DictWeb</a>
-      <div class="d-flex align-items-center gap-3">
-        <a class="nav-link" href="{{ url_for('home') }}">Accueil</a>
+      <div class="d-flex align-items-center gap-3">        
         <a class="nav-link active" href="{{ url_for('search_page') }}">Recherche</a>
         {% if role in ["editor", "admin"] %}
           <a class="nav-link" href="{{ url_for('create_entry_page') }}">Créer une entrée</a>

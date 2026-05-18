@@ -131,29 +131,18 @@ def _same_origin(url_value: str, request: Request) -> bool:
 
 
 def ensure_internal_get_request(request: Request, q: str, sig: str) -> None:
-    if not q.strip():
+    q = (q or "").strip()
+
+    # Pas de requête → OK
+    if not q:
         return
 
+    # Vérifie uniquement la signature HMAC
     if not is_valid_search_signature(q, sig):
-        raise HTTPException(status_code=403, detail="Signature de lien invalide.")
-
-    origin = (request.headers.get("origin") or "").strip()
-    referer = (request.headers.get("referer") or "").strip()
-
-    if origin:
-        if not _same_origin(origin, request):
-            raise HTTPException(status_code=403, detail="Origin non autorisée.")
-        return
-
-    if referer:
-        if not _same_origin(referer, request):
-            raise HTTPException(status_code=403, detail="Referer non autorisé.")
-        return
-
-    raise HTTPException(
-        status_code=403,
-        detail="Requête GET refusée : provenance interne non vérifiable.",
-    )
+        raise HTTPException(
+            status_code=403,
+            detail="Signature invalide.",
+        )
 
 
 @router.get("/", response_class=HTMLResponse, name="home")
