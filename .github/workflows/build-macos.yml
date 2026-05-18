@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Verify Python
         run: |
@@ -27,13 +27,6 @@ jobs:
           python --version
           which pip
           python -m pip --version
-
-      - name: Install MariaDB tools
-        run: |
-          brew update
-          brew install mariadb
-          which mariadb_config
-          mariadb_config --version
 
       - name: Install Python build tools
         run: |
@@ -68,9 +61,12 @@ jobs:
           echo $! > app.pid
 
       - name: Wait for /login
+        shell: bash
         run: |
           for i in {1..30}; do
-            if curl -fsS http://127.0.0.1:8000/login > /dev/null; then
+            code=$(curl --silent --output /dev/null --write-out "%{http_code}" http://127.0.0.1:8000/login || true)
+            echo "Attempt $i -> HTTP $code"
+            if [ "$code" = "200" ]; then
               echo "Login page is up"
               exit 0
             fi
@@ -81,10 +77,14 @@ jobs:
           exit 1
 
       - name: Smoke test login
+        shell: bash
         env:
           TEST_USERNAME: "admin"
           TEST_PASSWORD: "admin"
         run: |
+          test -n "$TEST_USERNAME"
+          test -n "$TEST_PASSWORD"
+
           code=$(curl -sS -L \
             -c cookies.txt -b cookies.txt \
             -o response.html \
@@ -92,13 +92,46 @@ jobs:
             -X POST "http://127.0.0.1:8000/login" \
             -d "username=${TEST_USERNAME}" \
             -d "password=${TEST_PASSWORD}")
+
           echo "Final HTTP code: $code"
           test "$code" = "200"
+
+          grep -qi '<title>Recherche dans le dictionnaire</title>' response.html || {
+            echo "La page finale n'est pas la page search attendue"
+            head -n 80 response.html
+            exit 1
+          }
+
+          grep -qi 'name="q"' response.html || {
+            echo "Le formulaire de recherche n'a pas été trouvé"
+            head -n 80 response.html
+            exit 1
+          }
+
+      - name: Smoke test search query
+        shell: bash
+        run: |
+          code=$(curl -sS -L \
+            -c cookies.txt -b cookies.txt \
+            -o search_response.html \
+            -w "%{http_code}" \
+            -X POST "http://127.0.0.1:8000/search" \
+            -d "q=stobs" \
+            -d "matchmode=contains")
+
+          echo "Search HTTP code: $code"
+          test "$code" = "200"
+
+          grep -qi '<title>Recherche dans le dictionnaire</title>' search_response.html || {
+            echo "La page de recherche n'a pas été rendue"
+            head -n 100 search_response.html
+            exit 1
+          }
 
       - name: Stop app
         if: always()
         run: |
-          kill $(cat app.pid) || true
+          kill "$(cat app.pid)" || true
           cat app.log || true
 
       - name: Zip the macOS app
