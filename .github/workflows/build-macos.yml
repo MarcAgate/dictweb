@@ -82,8 +82,8 @@ jobs:
 
       - name: Smoke test login
         env:
-          TEST_USERNAME: ${{ secrets.DICTWEB_TEST_USERNAME }}
-          TEST_PASSWORD: ${{ secrets.DICTWEB_TEST_PASSWORD }}
+          TEST_USERNAME: "admin"
+          TEST_PASSWORD: "admin"
         run: |
           code=$(curl -sS -L \
             -c cookies.txt -b cookies.txt \
